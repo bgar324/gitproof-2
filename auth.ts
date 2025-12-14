@@ -1,23 +1,28 @@
 import NextAuth from "next-auth"
 import GitHub from "next-auth/providers/github"
 
-// @ts-ignore // <--- This magic comment silences the "Not callable" error
-export const { handlers, auth, signIn, signOut } = NextAuth({
+// FIX: Cast NextAuth to 'any' to silence the "not callable" error
+export const { handlers, auth, signIn, signOut } = (NextAuth as any)({
   providers: [
     GitHub({
-      authorization: { params: { scope: "read:user repo" } },
+      authorization: { params: { scope: "read:user user:email repo" } },
     }),
   ],
   callbacks: {
-    // We explicitly type these as 'any' to fix the other red lines
-    async jwt({ token, account }: any) {
+    async jwt({ token, account, profile }: any) {
       if (account) {
         token.accessToken = account.access_token
+      }
+      if (profile) {
+        token.username = profile.login; 
       }
       return token
     },
     async session({ session, token }: any) {
       session.accessToken = token.accessToken
+      if (session.user) {
+        session.user.username = token.username
+      }
       return session
     },
   },

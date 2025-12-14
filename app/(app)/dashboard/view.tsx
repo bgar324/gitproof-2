@@ -1,7 +1,7 @@
 // app/dashboard/view.tsx
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   GitCommit,
@@ -30,6 +30,9 @@ import {
 } from "recharts";
 import { GithubProfile } from "@/lib/github";
 import { cn } from "@/lib/utils";
+import RepoModal from "@/components/repo-modal";
+import Link from "next/link";
+import { createPortal } from "react-dom"; // <--- Add this
 
 // --- SUB-COMPONENTS ---
 
@@ -244,96 +247,165 @@ const ScoreExplanationModal = ({
 }: {
   isOpen: boolean;
   onClose: () => void;
-}) => (
-  <AnimatePresence>
-    {isOpen && (
-      <>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={onClose}
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100]"
-        />
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 20 }}
-          className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-lg bg-card border border-border rounded-2xl shadow-2xl z-[101] overflow-hidden"
-        >
-          <div className="p-6 border-b border-border flex justify-between items-center bg-muted/30">
-            <h2 className="font-serif text-xl flex items-center gap-2">
-              <Shield className="text-primary" size={20} />
-              The Impact Algorithm
-            </h2>
-            <button
-              onClick={onClose}
-              className="p-1 hover:bg-secondary rounded-full transition-colors"
+}) => {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  // Scroll Lock
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "unset";
+    }
+    return () => {
+      document.body.style.overflow = "unset";
+    };
+  }, [isOpen]);
+
+  if (!mounted) return null;
+
+  return createPortal(
+    <AnimatePresence>
+      {isOpen && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="fixed inset-0 bg-zinc-950/60 backdrop-blur-sm z-[9998]"
+          />
+
+          {/* Modal */}
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{
+                opacity: 1,
+                scale: 1,
+                y: 0,
+                transition: { type: "spring", damping: 25, stiffness: 300 },
+              }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="w-full max-w-lg bg-background border border-border/50 shadow-2xl rounded-xl flex flex-col overflow-hidden pointer-events-auto ring-1 ring-white/10"
             >
-              <X size={20} className="text-muted-foreground" />
-            </button>
+              {/* Header */}
+              <div className="p-6 border-b border-border/50 bg-muted/20 backdrop-blur flex justify-between items-center">
+                <div>
+                  <h2 className="font-semibold text-lg flex items-center gap-2">
+                    <Shield className="text-emerald-500" size={18} />
+                    Impact Algorithm
+                  </h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    How we calculate the 0-50 score.
+                  </p>
+                </div>
+                <button
+                  onClick={onClose}
+                  className="p-2 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                >
+                  <X size={18} />
+                </button>
+              </div>
+
+              {/* Body */}
+              <div className="p-6 space-y-6 bg-card/50">
+                <div className="space-y-4">
+                  {/* Metric 1 */}
+                  <div className="flex gap-4 group">
+                    <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0 border border-blue-500/20 group-hover:bg-blue-500/20 transition-colors">
+                      <Star size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm text-foreground flex items-center gap-2">
+                        1. Popularity (Logarithmic)
+                        <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground font-mono">
+                          ~40%
+                        </span>
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        We use a log scale so viral repos don't break the chart.
+                        <br />
+                        <span className="opacity-70">
+                          Formula: Forks (2x) + Stars (1x).
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Metric 2 */}
+                  <div className="flex gap-4 group">
+                    <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0 border border-emerald-500/20 group-hover:bg-emerald-500/20 transition-colors">
+                      <Zap size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm text-foreground flex items-center gap-2">
+                        2. Recency Decay
+                        <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground font-mono">
+                          ~30%
+                        </span>
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        Code rots. We penalize inactivity.
+                      </p>
+                      <div className="flex gap-2 mt-2">
+                        <span className="text-[9px] border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 px-1.5 py-0.5 rounded">
+                          &lt;7d: +15pts
+                        </span>
+                        <span className="text-[9px] border border-yellow-500/30 bg-yellow-500/10 text-yellow-600 px-1.5 py-0.5 rounded">
+                          &lt;30d: +10pts
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Metric 3 */}
+                  <div className="flex gap-4 group">
+                    <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 shrink-0 border border-purple-500/20 group-hover:bg-purple-500/20 transition-colors">
+                      <Code2 size={18} />
+                    </div>
+                    <div>
+                      <h3 className="font-medium text-sm text-foreground flex items-center gap-2">
+                        3. Project Maturity
+                        <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground font-mono">
+                          ~30%
+                        </span>
+                      </h3>
+                      <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                        We parse your <code>README.md</code> size and language
+                        complexity to distinguish "Hello World" apps from real
+                        engineering.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-4 border-t border-border/50 bg-muted/20 text-center">
+                <p className="text-[10px] text-muted-foreground">
+                  This algorithm runs locally. It updates every time you sync.
+                </p>
+              </div>
+            </motion.div>
           </div>
-          <div className="p-6 space-y-6">
-            <p className="text-sm text-muted-foreground leading-relaxed">
-              We calculate the{" "}
-              <span className="text-foreground font-medium">
-                Impact Score (0-50)
-              </span>{" "}
-              by analyzing 3 key dimensions...
-            </p>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0 border border-blue-500/20">
-                  <Star size={20} />
-                </div>
-                <div>
-                  <h3 className="font-medium text-sm text-foreground">
-                    1. Popularity (Log)
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Forks (3x) over Stars (1x).
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 shrink-0 border border-emerald-500/20">
-                  <Zap size={20} />
-                </div>
-                <div>
-                  <h3 className="font-medium text-sm text-foreground">
-                    2. Recency Decay
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    +15 pts for code pushed this week.
-                  </p>
-                </div>
-              </div>
-              <div className="flex gap-4">
-                <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center text-purple-500 shrink-0 border border-purple-500/20">
-                  <Code2 size={20} />
-                </div>
-                <div>
-                  <h3 className="font-medium text-sm text-foreground">
-                    3. Maturity
-                  </h3>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Readme length & Language complexity.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </>
-    )}
-  </AnimatePresence>
-);
+        </>
+      )}
+    </AnimatePresence>,
+    document.body
+  );
+};
 
 // --- MAIN VIEW ---
 
 export default function DashboardView({ data }: { data: GithubProfile }) {
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
   const [timeRange, setTimeRange] = useState<"all" | "90d" | "30d">("all");
+  const [selectedRepo, setSelectedRepo] = useState<any>(null);
 
   // --- 1. FILTER LOGIC ---
   const filteredHeatmap = useMemo(() => {
@@ -475,7 +547,7 @@ export default function DashboardView({ data }: { data: GithubProfile }) {
                 </p>
               </div>
               <div className="flex bg-secondary/50 p-1 rounded-lg">
-                {(["all", "90d", "30d"] as const).map((range) => (
+                {(["30d", "90d", "all"] as const).map((range) => (
                   <button
                     key={range}
                     onClick={() => setTimeRange(range)}
@@ -536,37 +608,53 @@ export default function DashboardView({ data }: { data: GithubProfile }) {
         {/* --- ROW 3: Top Repos --- */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
+            {/* Header Area */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.7 }}
-              className="flex items-center justify-between"
+              className="flex items-end justify-between mb-6" // increased mb-4 to mb-6 for breathing room
             >
-              <div className="flex items-baseline gap-3">
-                <h3 className="font-serif text-xl">Top Repositories</h3>
-                <button
-                  onClick={() => setIsScoreModalOpen(true)}
-                  className="text-xs text-muted-foreground hover:text-primary flex items-center gap-1 transition-colors hover:underline decoration-dotted underline-offset-4"
-                >
-                  <Info size={12} /> How is this calculated?
-                </button>
+              {/* Left: Title & Context */}
+              <div>
+                <h3 className="font-serif text-xl mb-1">Top Repositories</h3>
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <span>Ranked by Impact Score</span>
+                  <span className="text-border">•</span>
+                  <button
+                    onClick={() => setIsScoreModalOpen(true)}
+                    className="hover:text-primary transition-colors hover:underline decoration-dotted underline-offset-2 flex items-center gap-1"
+                  >
+                    How is this calculated?
+                  </button>
+                </div>
               </div>
-              <span className="text-xs text-muted-foreground hidden sm:block">
-                Ranked by Impact Score
-              </span>
-            </motion.div>
 
+              {/* Right: Action */}
+              <Link
+                href="/dashboard/repos"
+                className="group flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors pb-1"
+              >
+                View Archive
+                <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-md ml-1 text-[10px] group-hover:bg-primary/20 transition-colors">
+                  {data.topRepos.length}
+                </span>
+                <ArrowUpRight
+                  size={12}
+                  className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
+              </Link>
+            </motion.div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {data.topRepos.map((repo, i) => (
-                <motion.a
+              {data.topRepos.slice(0, 6).map((repo, i) => (
+                <motion.div
                   key={repo.name}
-                  href={repo.url}
-                  target="_blank"
                   rel="noopener noreferrer"
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.7 + i * 0.1 }}
-                  className="block group h-full"
+                  onClick={() => setSelectedRepo(repo)} // <--- Add this!
+                  className="cursor-pointer block group h-full"
                 >
                   <div className="h-full bg-card border border-border rounded-xl p-5 transition-all duration-200 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 flex flex-col">
                     <div className="flex justify-between items-start mb-3">
@@ -637,7 +725,7 @@ export default function DashboardView({ data }: { data: GithubProfile }) {
                       <div>{repo.updated}</div>
                     </div>
                   </div>
-                </motion.a>
+                </motion.div>
               ))}
             </div>
           </div>
@@ -670,6 +758,11 @@ export default function DashboardView({ data }: { data: GithubProfile }) {
           </Card>
         </div>
       </div>
+      <RepoModal
+        repo={selectedRepo}
+        isOpen={!!selectedRepo}
+        onClose={() => setSelectedRepo(null)}
+      />
     </main>
   );
 }

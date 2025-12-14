@@ -1,52 +1,103 @@
 "use server";
 
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { generateText } from "ai";
+import { db } from "@/lib/db";
+import { auth } from "@/auth";
+import { revalidatePath } from "next/cache";
+import { syncUserData } from "@/lib/sync";
 
-const genAI = new GoogleGenerativeAI(process.env.GOOGLE_API_KEY!);
+const google = createGoogleGenerativeAI({
+  apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
+});
 
+// --- 1. SYNC ACTION ---
+export async function triggerSync() {
+  const session = await auth();
+  if (!session?.user?.username || !session?.user?.email) throw new Error("Not authenticated");
+
+  await syncUserData(
+    session.user.username, 
+    session.user.email, 
+    session.user.image || ""
+  );
+  
+  revalidatePath("/recruiter");
+  revalidatePath("/");
+  return { success: true };
+}
+
+// --- 2. GENERATE ACTION (Updated) ---
 export async function generateRecruiterDescription(
-  repoName: string, 
-  rawDesc: string, 
-  languages: string[],
-  readme: string // <--- NEW PARAMETER
+  repoName: string,
+  rawDesc: string,
+  tags: string[],
+  readme: string
 ) {
-  // Use 2.5 Flash for best speed/quality balance
-  const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Not authenticated");
 
-  // Safety truncate to avoid massive payload issues (though 2.5 can handle 1M tokens)
-  const safeReadme = readme ? readme.substring(0, 5000) : "No README available.";
+  // A. Generate Text
+  const { text } = await generateText({
+    model: google("gemini-2.5-flash"),
+    prompt: `
+      Act as a Senior Technical Recruiter at a FAANG company.
+      Rewrite this project description to be impactful, result-oriented, and quantitative.
+      
+      Project: ${repoName}
+      Raw Description: "${rawDesc}"
+      Tech Stack: ${tags.join(", ")}
+      Context: ${readme ? readme.slice(0, 500) : "No readme"}
+      
+      Constraints:
+      - Max 2 sentences.
+      - Use active verbs (Architected, Deployed, Optimized).
+      - Include metrics if possible (e.g., "Reduced latency by 40%").
+      
+      Output ONLY the new description.
+    `,
+  });
 
-  const prompt = `
-    You are an expert technical recruiter and senior software engineering manager at a FAANG company.
-    
-    Task: Rewrite the following GitHub repository description into a SINGLE, high-impact resume bullet point.
-    
-    Project Context:
-    - Name: ${repoName}
-    - Technologies: ${languages.join(", ")}
-    - Description: "${rawDesc || "No description provided."}"
-    - README Content (Excerpt): 
-    """
-    ${safeReadme}
-    """
-    
-    Guidelines:
-    - Start with a strong action verb (e.g., Architected, Engineered, Optimized, Deployed).
-    - Focus on technical constraints, performance metrics, and business value.
-    - EXTRACT SPECIFIC DETAILS from the README (e.g., if it mentions "Redis" or "AWS Lambda", include that).
-    - Do NOT mention "University project" or "Homework". Treat it as professional software.
-    - Do NOT use pronouns (I, we, my).
-    - Keep it under 30 words.
-    - Output ONLY the bullet point text. No quotes.
-  `;
+  // B. Save ONLY the text (Do NOT touch the score)
+  const user = await db.user.findUnique({ where: { email: session.user.email } });
 
-  try {
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    const text = response.text();
-    return text.trim();
-  } catch (error) {
-    console.error("AI Generation failed:", error);
-    return "Failed to generate description. Please try again.";
+  if (user) {
+    await db.project.update({
+      where: {
+        userId_repoName: {
+          userId: user.id,
+          repoName: repoName
+        }
+      },
+      data: {
+        aiDescription: text
+        // impactScore is NOT updated here anymore!
+      }
+    });
   }
+
+  return text;
+}
+
+// --- 3. REVERT ACTION (New) ---
+export async function revertRecruiterDescription(repoName: string) {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Not authenticated");
+
+  const user = await db.user.findUnique({ where: { email: session.user.email } });
+
+  if (user) {
+    await db.project.update({
+      where: {
+        userId_repoName: {
+          userId: user.id,
+          repoName: repoName
+        }
+      },
+      data: {
+        aiDescription: null // Delete the AI text
+      }
+    });
+  }
+  return { success: true };
 }

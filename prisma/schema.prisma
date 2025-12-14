@@ -1,0 +1,56 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("POSTGRES_PRISMA_URL") // Uses connection pooling
+  directUrl = env("POSTGRES_URL_NON_POOLING") // Uses direct connection
+}
+
+model User {
+  id            String    @id @default(cuid())
+  // Matches the ID from GitHub/NextAuth
+  email         String    @unique
+  name          String?
+  avatarUrl     String?
+  username      String    @unique // GitHub login
+  
+  createdAt     DateTime  @default(now())
+  lastSyncedAt  DateTime? // When did we last pull from GitHub?
+  
+  projects      Project[]
+}
+
+model Project {
+  id              String   @id @default(cuid())
+  
+  // Relation to User
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // GitHub Data
+  repoName        String
+  repoUrl         String
+  description     String?  // The raw GitHub description
+  homepage        String?
+  language        String?
+  stars           Int      @default(0)
+  forks           Int      @default(0)
+  
+  readme          String?  @db.Text // Store full README
+  topics          String[] // Array of tags
+  
+  lastPushedAt    DateTime // GitHub's updated_at
+
+  // GitProof Specifics
+  impactScore     Int      @default(0)
+  aiDescription   String?  @db.Text // Your generated resume bullet
+  isHidden        Boolean  @default(false)
+  
+  updatedAt       DateTime @updatedAt // When did WE last touch this record
+
+  @@unique([userId, repoName]) // Prevent duplicate repos for same user
+}
