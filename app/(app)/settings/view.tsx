@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { useTheme } from "next-themes"; // <--- IMPORT THIS
+import { useTheme } from "next-themes";
 import {
   RefreshCw,
   Trash2,
@@ -15,6 +15,8 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { triggerSync } from "@/app/actions";
 
 // --- REUSABLE COMPONENTS ---
 
@@ -76,12 +78,10 @@ const Switch = ({ checked, onCheckedChange, label }: any) => (
 export default function SettingsView({ user, settings }: any) {
   if (!user) return null;
 
-  // 1. Theme Hook
+  // 1. Theme Hook & Router
   const { theme, setTheme } = useTheme();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
-
-  // Prevent hydration mismatch for themes
-  useEffect(() => setMounted(true), []);
 
   // 2. State Management
   const initialPublic = settings?.isPublic ?? false;
@@ -90,17 +90,31 @@ export default function SettingsView({ user, settings }: any) {
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [emailNotifs, setEmailNotifs] = useState(initialNotifs);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSyncing, setIsSyncing] = useState(false);
 
-  // 3. The "Fake" Save (Connect your API here later)
+  // Prevent hydration mismatch for themes
+  useEffect(() => setMounted(true), []);
+
+  // 3. Logic Handlers
+
+  // Re-syncs data by calling the server action
+  const handleResync = async () => {
+    setIsSyncing(true);
+    try {
+      await triggerSync(); // Actually syncs from GitHub API
+      router.refresh(); // Then refresh the UI
+    } catch (error) {
+      console.error("Sync failed:", error);
+      alert("Sync failed. Please try again.");
+    } finally {
+      setIsSyncing(false);
+    }
+  };
+
   const handleSave = async () => {
     setIsSaving(true);
-
-    // TODO: Connect to backend
-    // await fetch('/api/user/settings', {
-    //   method: 'POST',
-    //   body: JSON.stringify({ isPublic, emailNotifs })
-    // });
-
+    // TODO: Connect to backend API to persist settings
+    // await fetch('/api/user/settings', { ... });
     setTimeout(() => setIsSaving(false), 1000);
   };
 
@@ -130,7 +144,7 @@ export default function SettingsView({ user, settings }: any) {
       </div>
 
       <div className="space-y-2">
-        {/* --- APPEARANCE SECTION (NEW) --- */}
+        {/* --- APPEARANCE SECTION --- */}
         <Section
           title="Appearance"
           description="Customize how GitProof looks on your device."
@@ -156,6 +170,7 @@ export default function SettingsView({ user, settings }: any) {
           </div>
         </Section>
 
+        {/* --- VISIBILITY SECTION --- */}
         <Section
           title="Visibility"
           description="Control who can see your GitProof report card."
@@ -173,10 +188,11 @@ export default function SettingsView({ user, settings }: any) {
                 className="p-3 bg-secondary/30 rounded-lg border border-border flex items-center justify-between text-xs"
               >
                 <span className="text-muted-foreground truncate">
-                  gitproof.com/{user.name || "username"}
+                  gitproof.com/u/{user.username || "username"}
                 </span>
                 <a
-                  href="#"
+                  href={`/u/${user.username}`}
+                  target="_blank"
                   className="flex items-center gap-1 text-primary hover:underline"
                 >
                   Visit <ExternalLink size={10} />
@@ -186,6 +202,7 @@ export default function SettingsView({ user, settings }: any) {
           </div>
         </Section>
 
+        {/* --- ACCOUNT SECTION --- */}
         <Section
           title="Account"
           description="Your personal information linked from GitHub."
@@ -212,8 +229,16 @@ export default function SettingsView({ user, settings }: any) {
             </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <button className="flex items-center justify-center gap-2 h-9 rounded border border-border text-xs font-medium hover:bg-secondary transition-colors">
-              <RefreshCw size={14} /> Re-sync GitHub Data
+            <button
+              onClick={handleResync}
+              disabled={isSyncing}
+              className="flex items-center justify-center gap-2 h-9 rounded border border-border text-xs font-medium hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-wait"
+            >
+              <RefreshCw
+                size={14}
+                className={isSyncing ? "animate-spin" : ""}
+              />
+              {isSyncing ? "Syncing..." : "Re-sync GitHub Data"}
             </button>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
@@ -224,6 +249,7 @@ export default function SettingsView({ user, settings }: any) {
           </div>
         </Section>
 
+        {/* --- NOTIFICATIONS SECTION --- */}
         <Section title="Notifications" description="We promise not to spam.">
           <Switch
             label="Product Updates"
@@ -232,6 +258,7 @@ export default function SettingsView({ user, settings }: any) {
           />
         </Section>
 
+        {/* --- DANGER ZONE --- */}
         <Section title="Danger Zone" description="Irreversible actions." danger>
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>

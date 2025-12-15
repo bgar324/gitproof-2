@@ -407,6 +407,9 @@ export default function DashboardView({ data }: { data: GithubProfile }) {
   const [timeRange, setTimeRange] = useState<"all" | "90d" | "30d">("all");
   const [selectedRepo, setSelectedRepo] = useState<any>(null);
 
+  // Removed: Client-side sync now handled on server (dashboard/page.tsx)
+  // Data is cached in User.profileData with 1-hour TTL
+
   // --- 1. FILTER LOGIC ---
   const filteredHeatmap = useMemo(() => {
     if (timeRange === "all") return data.heatmap;
@@ -482,7 +485,7 @@ export default function DashboardView({ data }: { data: GithubProfile }) {
 
           <div className="w-10 h-10 rounded-full overflow-hidden border border-border">
             <img
-              src={data.avatarUrl}
+              src={data.image}
               alt="Avatar"
               className="w-full h-full object-cover"
             />
@@ -637,7 +640,7 @@ export default function DashboardView({ data }: { data: GithubProfile }) {
               >
                 View Archive
                 <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-md ml-1 text-[10px] group-hover:bg-primary/20 transition-colors">
-                  {data.topRepos.length}
+                  {data.repoCount}
                 </span>
                 <ArrowUpRight
                   size={12}

@@ -6,7 +6,7 @@ const GITHUB_ENDPOINT = "https://api.github.com/graphql";
 // --- Types ---
 export interface GithubProfile {
   username: string;
-  avatarUrl: string;
+  image: string;
   totalContributions: number;
   pullRequests: number;
   repoCount: number;
@@ -43,6 +43,7 @@ const PROFILE_QUERY = gql`
       ) {
         totalCount
         nodes {
+          databaseId
           name
           description
           url
@@ -125,8 +126,9 @@ export async function fetchGithubProfile(username: string) {
 export async function fetchUserRepos(username: string) {
   const client = await getClient();
   const data: any = await client.request(PROFILE_QUERY);
-  
+
   return data.viewer.repositories.nodes.map((repo: any) => ({
+    id: repo.databaseId,
     name: repo.name,
     description: repo.description,
     html_url: repo.url,
@@ -155,7 +157,7 @@ export async function getGitProofData(): Promise<GithubProfile | null> {
 
     return {
       username: user.login,
-      avatarUrl: user.avatarUrl,
+      image: user.avatarUrl,
       totalContributions: user.contributionsCollection.contributionCalendar.totalContributions,
       pullRequests: user.pullRequests.totalCount,
       repoCount: user.repositories.totalCount,
@@ -205,10 +207,11 @@ function getTopRepos(repos: any[]) {
     .sort((a: any, b: any) => b.impactScore - a.impactScore)
     // .slice(0, 6)
     .map((repo: any) => ({
+      id: repo.databaseId,
       name: repo.name,
       url: repo.url,
-      homepage: repo.homepageUrl, // <--- ADD THIS
-      topics: repo.repositoryTopics?.nodes?.map((n: any) => n.topic.name) || [], // <--- ADD THIS
+      homepage: repo.homepageUrl,
+      topics: repo.repositoryTopics?.nodes?.map((n: any) => n.topic.name) || [],
       stars: repo.stargazerCount,
       forks: repo.forkCount,
       score: repo.impactScore,
@@ -217,9 +220,9 @@ function getTopRepos(repos: any[]) {
       languages: repo.languages?.nodes?.map((n: any) => n.name) || [],
       language: repo.primaryLanguage?.name || "Markdown",
       color: repo.primaryLanguage?.color || "#6e7681",
-      desc: repo.description || "", // Removed default text so we can check length accurately
+      desc: repo.description || "",
       updated: new Date(repo.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      lastPush: repo.updatedAt, // <--- ADD THIS (for recency check)
+      lastPush: repo.updatedAt,
       isPublic: repo.visibility === "PUBLIC",
     }));
 }
