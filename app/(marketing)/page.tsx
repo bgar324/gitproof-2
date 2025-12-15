@@ -12,7 +12,8 @@ import {
   TrendingUp, 
   ShieldCheck,
   GitPullRequest,
-  Download
+  Download,
+  GitGraph
 } from "lucide-react";
 
 // --- SUB-COMPONENTS ---
@@ -91,7 +92,7 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="font-serif text-xl font-bold flex items-center gap-2">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground">
-              <ShieldCheck size={18} />
+              <GitGraph size={18} />
             </div>
             GitProof
           </div>

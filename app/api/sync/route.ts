@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/auth"; // Your auth helper
-import { prisma } from "@/lib/prisma"; // Your prisma client instance
+import { auth } from "@/auth";
+import { db } from "@/lib/db";
 
 export async function POST(req: Request) {
   // 1. Authenticate (Security Check)
@@ -24,7 +24,7 @@ export async function POST(req: Request) {
 
     // 2. Update User Stats (The JSON Blob)
     // We store the heavy visual data (heatmap) in a single JSON column
-    await prisma.user.update({
+    await db.user.update({
       where: { email: session.user.email },
       data: {
         username: username, // Ensure username is synced
@@ -44,12 +44,12 @@ export async function POST(req: Request) {
     // 3. Upsert Projects (Repositories)
     // We loop through repos and update them if they exist, create if they don't.
     // This is efficient enough for <100 repos.
-    const user = await prisma.user.findUnique({ where: { email: session.user.email } });
+    const user = await db.user.findUnique({ where: { email: session.user.email } });
     
     if (user) {
       for (const repo of topRepos) {
         // We assume 'repo' has the structure from your formatRepos function
-        await prisma.project.upsert({
+        await db.project.upsert({
           where: {
             userId_githubId: {
               userId: user.id,

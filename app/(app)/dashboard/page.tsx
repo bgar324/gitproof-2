@@ -5,6 +5,14 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 
+// Helper to sanitize data for PostgreSQL JSON storage
+function sanitizeForPostgres(obj: any): any {
+  const jsonString = JSON.stringify(obj);
+  // Remove null bytes and other problematic Unicode characters
+  const sanitized = jsonString.replace(/\\u0000/g, '').replace(/\u0000/g, '');
+  return JSON.parse(sanitized);
+}
+
 export default async function DashboardPage() {
   // 1. Auth check
   const session = await auth();
@@ -35,16 +43,17 @@ export default async function DashboardPage() {
       redirect("/");
     }
 
-    // 5. Save to cache
+    // 5. Save to cache (sanitize to remove null bytes)
+    const sanitizedData = sanitizeForPostgres(freshData);
     await db.user.update({
       where: { email: session.user.email },
       data: {
-        profileData: freshData as any,
+        profileData: sanitizedData as any,
         lastSyncedAt: new Date(),
       },
     });
 
-    return <DashboardView data={freshData} />;
+    return <DashboardView data={freshData} lastSyncedAt={new Date()} />;
   }
 
   // 6. Use cached data + live projects from DB
@@ -70,11 +79,13 @@ export default async function DashboardPage() {
     breakdown: { stars: p.stars, forks: p.forks, updatedAt: p.lastPush.toISOString() },
   }));
 
-  // Merge cached data with live projects
+  // Merge cached data with live projects and user info
   const hybridData = {
     ...cachedData,
     topRepos, // Always fresh from DB
+    image: user.image || cachedData.image, // Ensure avatar is included
+    username: user.username || cachedData.username,
   };
 
-  return <DashboardView data={hybridData} />;
+  return <DashboardView data={hybridData} lastSyncedAt={user.lastSyncedAt || new Date()} />;
 }

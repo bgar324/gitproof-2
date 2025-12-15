@@ -14,7 +14,7 @@ export function Navbar() {
   useEffect(() => setMounted(true), []);
 
   const links = [
-    // { href: "/showcase", label: "Showcase" },
+    { href: "/showcase", label: "Showcase" },
     { href: "/manifesto", label: "Manifesto" },
   ];
 

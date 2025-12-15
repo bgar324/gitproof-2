@@ -19,6 +19,7 @@ import {
   Activity,
   Calendar,
   TrendingUp,
+  RefreshCw,
 } from "lucide-react";
 import {
   BarChart,
@@ -32,7 +33,25 @@ import { GithubProfile } from "@/lib/github";
 import { cn } from "@/lib/utils";
 import RepoModal from "@/components/repo-modal";
 import Link from "next/link";
-import { createPortal } from "react-dom"; // <--- Add this
+import { createPortal } from "react-dom";
+import { useRouter } from "next/navigation";
+import { triggerSync } from "@/app/actions";
+
+// --- HELPERS ---
+
+function getTimeAgo(date: Date): string {
+  const now = new Date().getTime();
+  const then = new Date(date).getTime();
+  const seconds = Math.floor((now - then) / 1000);
+
+  if (seconds < 60) return 'just now';
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
 
 // --- SUB-COMPONENTS ---
 
@@ -402,10 +421,41 @@ const ScoreExplanationModal = ({
 
 // --- MAIN VIEW ---
 
-export default function DashboardView({ data }: { data: GithubProfile }) {
+export default function DashboardView({
+  data,
+  lastSyncedAt
+}: {
+  data: GithubProfile;
+  lastSyncedAt: Date;
+}) {
+  const router = useRouter();
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
   const [timeRange, setTimeRange] = useState<"all" | "90d" | "30d">("all");
   const [selectedRepo, setSelectedRepo] = useState<any>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [timeAgo, setTimeAgo] = useState(getTimeAgo(lastSyncedAt));
+
+  // Update time ago every minute
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setTimeAgo(getTimeAgo(lastSyncedAt));
+    }, 60000); // Update every minute
+    return () => clearInterval(interval);
+  }, [lastSyncedAt]);
+
+  // Handle manual refresh
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await triggerSync();
+      router.refresh();
+      setTimeAgo('just now');
+    } catch (error) {
+      console.error('Refresh failed:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // Removed: Client-side sync now handled on server (dashboard/page.tsx)
   // Data is cached in User.profileData with 1-hour TTL
@@ -483,13 +533,40 @@ export default function DashboardView({ data }: { data: GithubProfile }) {
             </div>
           </motion.div>
 
-          <div className="w-10 h-10 rounded-full overflow-hidden border border-border">
-            <img
-              src={data.image}
-              alt="Avatar"
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex items-center gap-3"
+          >
+            {/* Sync Status Pill */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-secondary/50 text-muted-foreground border border-border/50">
+              <Clock size={10} className="opacity-60" />
+              <span>Synced {timeAgo}</span>
+            </div>
+
+            {/* Refresh Button */}
+            <button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="h-8 px-3 rounded-lg border border-border/50 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-secondary/50 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <RefreshCw
+                size={12}
+                className={cn(isRefreshing && "animate-spin")}
+              />
+              {isRefreshing ? "Syncing..." : "Refresh"}
+            </button>
+
+            {/* Avatar */}
+            <div className="w-10 h-10 rounded-full overflow-hidden border border-border">
+              <img
+                src={data.image}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
+            </div>
+          </motion.div>
         </div>
 
         {/* --- ROW 1: Stats (Replaced 4th Card) --- */}

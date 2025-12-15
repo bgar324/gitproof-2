@@ -239,7 +239,7 @@ export default function RepoModal({
                 </div>
 
                 {/* RIGHT: The Editor (Hardcoded Dark Mode) */}
-                <div className="flex-1 flex flex-col min-w-0 bg-[#0d1117] text-zinc-300">
+                <div className="flex-1 flex flex-col min-w-0 bg-[#191919] text-zinc-300">
                   
                   {/* Editor Tabs */}
                   <div className="flex items-center justify-between px-4 bg-[#010409] border-b border-[#30363d] h-10 shrink-0">
@@ -317,7 +317,7 @@ export default function RepoModal({
                       ) : (
                         <textarea
                           readOnly
-                          className="w-full h-full bg-[#0d1117] text-zinc-300 font-mono text-xs p-8 resize-none focus:outline-none leading-relaxed"
+                          className="w-full h-full bg-[#191819] text-zinc-300 font-mono text-xs p-8 resize-none focus:outline-none leading-relaxed"
                           value={repo.readme}
                         />
                       )

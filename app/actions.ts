@@ -7,6 +7,14 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { syncUserData } from "@/lib/sync";
 
+// Helper to sanitize data for PostgreSQL JSON storage
+function sanitizeForPostgres(obj: any): any {
+  const jsonString = JSON.stringify(obj);
+  // Remove null bytes and other problematic Unicode characters
+  const sanitized = jsonString.replace(/\\u0000/g, '').replace(/\u0000/g, '');
+  return JSON.parse(sanitized);
+}
+
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
 });
@@ -17,13 +25,31 @@ export async function triggerSync() {
   if (!session?.user?.username || !session?.user?.email)
     throw new Error("Not authenticated");
 
-  // FIXED: Use 'image' (not avatarUrl) to match schema
+  // 1. Sync repos to database
   await syncUserData(
     session.user.username,
     session.user.email,
     session.user.image || ""
   );
 
+  // 2. Also fetch and cache fresh stats from GitHub
+  const { getGitProofData } = await import("@/lib/github");
+  const freshData = await getGitProofData();
+
+  if (freshData) {
+    // Sanitize data to remove null bytes that PostgreSQL can't handle
+    const sanitizedData = sanitizeForPostgres(freshData);
+
+    await db.user.update({
+      where: { email: session.user.email },
+      data: {
+        profileData: sanitizedData as any,
+        lastSyncedAt: new Date(),
+      },
+    });
+  }
+
+  revalidatePath("/dashboard");
   revalidatePath("/recruiter");
   return { success: true };
 }
@@ -95,6 +121,6 @@ export async function revertRecruiterDescription(repoName: string) {
       data: { aiDescription: null },
     });
   }
-  revalidatePath("/recruiter");
+  revalidatePath("/editor");
   return { success: true };
 }

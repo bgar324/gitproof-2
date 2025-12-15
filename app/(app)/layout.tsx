@@ -4,11 +4,11 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Briefcase,
   Settings,
   LogOut,
   GitGraph,
-  Menu
+  Menu,
+  PenTool
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
@@ -22,9 +22,9 @@ const NAV_ITEMS = [
     icon: LayoutDashboard
   },
   {
-    label: "Recruiter Mode",
-    href: "/recruiter",
-    icon: Briefcase
+    label: "Editor",
+    href: "/editor",
+    icon: PenTool
   },
 ];
 
