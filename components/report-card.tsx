@@ -11,7 +11,22 @@ import {
   Cpu, // For "The Machine"
   Rocket, // For "10x Engineer"
   Code2, // Default
+  Flame, // For "The Shipper"
+  Users, // For "The Influencer"
+  Sparkles, // For "The Craftsperson"
+  Gem, // For "The Specialist"
+  Globe, // For "The Polyglot"
+  GitPullRequest, // For "The Collaborator"
+  Workflow, // For "The Automator"
+  Blocks, // For "The Builder"
+  Trophy, // For "The Champion"
+  Moon, // For "The Night Owl"
+  Zap as Lightning, // For "The Streak Master"
+  Heart, // For "Open Source Hero"
+  Target, // For "The Perfectionist"
+  Shield, // For "The Maintainer"
 } from "lucide-react";
+import type { UserInsights } from "@/lib/stats";
 
 // --- HELPERS ---
 
@@ -70,16 +85,151 @@ const InsightRow = ({
 
 // --- MAIN COMPONENT ---
 
-export function ReportCard({ user, stats, className }: any) {
-  // 1. Archetype Logic (Icon + Title)
+export function ReportCard({
+  user,
+  stats,
+  insights,
+  showGrowthFocus = false,
+  className
+}: {
+  user: any;
+  stats: any;
+  insights?: UserInsights;
+  showGrowthFocus?: boolean;
+  className?: string;
+}) {
+  // 1. Enhanced Archetype Logic (Icon + Title + Color)
   const getArchetype = () => {
-    if (stats.consistency > 90)
+    // Extract additional data from user
+    const profileData = (user.profileData || {}) as any;
+    const pullRequests = profileData.pullRequests || 0;
+    const streak = profileData.streak || 0;
+    const projects = user.projects || [];
+
+    // Calculate additional metrics
+    const languageMap = new Map<string, number>();
+    let totalStars = 0;
+    let totalForks = 0;
+    let recentActivity = 0;
+    let documentedProjects = 0;
+
+    projects.forEach((p: any) => {
+      if (p.language) {
+        languageMap.set(p.language, (languageMap.get(p.language) || 0) + 1);
+      }
+      totalStars += p.stars || 0;
+      totalForks += p.forks || 0;
+
+      // Use a fixed reference date to avoid hydration mismatches
+      const now = new Date().setHours(0, 0, 0, 0); // Normalize to start of day
+      const daysSince = (now - new Date(p.lastPush).getTime()) / (1000 * 60 * 60 * 24);
+      if (daysSince < 30) recentActivity++;
+
+      if (p.readme && p.readme.length > 500) documentedProjects++;
+    });
+
+    const languages = Array.from(languageMap.entries());
+    const primaryLanguage = languages.sort((a, b) => b[1] - a[1])[0];
+    const languageSpecialization = primaryLanguage ? primaryLanguage[1] / projects.length : 0;
+    const documentationRate = projects.length > 0 ? documentedProjects / projects.length : 0;
+
+    // PRIORITY ORDER: Most specific archetypes first, then broader categories
+
+    // 1. THE LEGEND (Elite combination)
+    if (stats.impactScore >= 45 && totalStars >= 500 && stats.consistency >= 80) {
+      return { title: "The Legend", icon: Trophy, color: "text-amber-400" };
+    }
+
+    // 2. THE INFLUENCER (High community engagement)
+    if (totalStars >= 200 && totalForks >= 50) {
+      return { title: "The Influencer", icon: Users, color: "text-pink-500" };
+    }
+
+    // 3. OPEN SOURCE HERO (Many stars + PRs)
+    if (totalStars >= 100 && pullRequests >= 50) {
+      return { title: "Open Source Hero", icon: Heart, color: "text-red-500" };
+    }
+
+    // 4. THE STREAK MASTER (Incredible consistency)
+    if (streak >= 100 || stats.consistency >= 95) {
+      return { title: "The Streak Master", icon: Lightning, color: "text-yellow-500" };
+    }
+
+    // 5. THE MACHINE (Very high consistency)
+    if (stats.consistency >= 85) {
       return { title: "The Machine", icon: Cpu, color: "text-blue-500" };
-    if (stats.repoCount > 20)
-      return { title: "The Architect", icon: Layers, color: "text-indigo-500" };
-    if (stats.impactScore > 100)
-      return { title: "10x Engineer", icon: Rocket, color: "text-orange-500" };
-    return { title: "Full Stack Dev", icon: Code2, color: "text-primary" };
+    }
+
+    // 6. THE SHIPPER (High velocity)
+    if (recentActivity >= 5 && stats.impactScore >= 25) {
+      return { title: "The Shipper", icon: Flame, color: "text-orange-500" };
+    }
+
+    // 7. THE CHAMPION (Very high impact)
+    if (stats.impactScore >= 40) {
+      return { title: "The Champion", icon: Rocket, color: "text-purple-500" };
+    }
+
+    // 8. THE PERFECTIONIST (High polish + docs)
+    if (documentationRate >= 0.8 && projects.length >= 5) {
+      return { title: "The Perfectionist", icon: Target, color: "text-violet-500" };
+    }
+
+    // 9. THE CRAFTSPERSON (Good documentation)
+    if (documentationRate >= 0.6 && stats.impactScore >= 20) {
+      return { title: "The Craftsperson", icon: Sparkles, color: "text-cyan-500" };
+    }
+
+    // 10. THE COLLABORATOR (Many PRs)
+    if (pullRequests >= 75) {
+      return { title: "The Collaborator", icon: GitPullRequest, color: "text-green-500" };
+    }
+
+    // 11. THE SPECIALIST (Deep language expertise)
+    if (languageSpecialization >= 0.75 && projects.length >= 5 && primaryLanguage) {
+      return { title: "The Specialist", icon: Gem, color: "text-emerald-500" };
+    }
+
+    // 12. THE POLYGLOT (Many languages)
+    if (languages.length >= 6) {
+      return { title: "The Polyglot", icon: Globe, color: "text-indigo-500" };
+    }
+
+    // 13. THE ARCHITECT (Many projects)
+    if (stats.repoCount >= 25) {
+      return { title: "The Architect", icon: Layers, color: "text-slate-500" };
+    }
+
+    // 14. THE BUILDER (Good amount of projects)
+    if (stats.repoCount >= 15) {
+      return { title: "The Builder", icon: Blocks, color: "text-teal-500" };
+    }
+
+    // 15. THE MAINTAINER (Long-term commitment)
+    if (stats.repoCount >= 10 && stats.consistency >= 60) {
+      return { title: "The Maintainer", icon: Shield, color: "text-blue-600" };
+    }
+
+    // 16. THE AUTOMATOR (Workflow specialist - if we detect CI/CD)
+    const hasWorkflows = projects.some((p: any) =>
+      p.topics?.some((t: string) =>
+        ['ci', 'cd', 'automation', 'github-actions'].includes(t.toLowerCase())
+      )
+    );
+    if (hasWorkflows && stats.impactScore >= 20) {
+      return { title: "The Automator", icon: Workflow, color: "text-purple-600" };
+    }
+
+    // DEFAULT: Based on general activity level
+    if (stats.impactScore >= 25) {
+      return { title: "Rising Star", icon: Rocket, color: "text-amber-500" };
+    }
+
+    if (stats.repoCount >= 5) {
+      return { title: "Full Stack Dev", icon: Code2, color: "text-primary" };
+    }
+
+    return { title: "Developer", icon: Code2, color: "text-muted-foreground" };
   };
 
   const { title, icon: ArchetypeIcon, color: archetypeColor } = getArchetype();
@@ -110,6 +260,7 @@ export function ReportCard({ user, stats, className }: any) {
         "relative bg-card border border-border rounded-xl overflow-hidden flex flex-col h-full shadow-2xl shadow-black/5",
         className
       )}
+      suppressHydrationWarning
     >
       {/* HEADER */}
       <div className="relative p-6 pb-8 border-b border-border bg-muted/5">
@@ -194,47 +345,64 @@ export function ReportCard({ user, stats, className }: any) {
               Detected Strengths
             </h3>
             <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded">
-              AI Analysis
+              Analyzed
             </span>
           </div>
           <div className="space-y-3 pl-1">
-            <InsightRow
-              type="strength"
-              text="Exceptional code review depth in TypeScript projects."
-            />
-            <InsightRow
-              type="strength"
-              text="Maintains 99.9% test coverage on core libraries."
-            />
-            <InsightRow
-              type="strength"
-              text="High velocity shipper (Avg PR merge: 4h)."
-            />
+            {insights?.strengths && insights.strengths.length > 0 ? (
+              insights.strengths.map((strength, index) => (
+                <InsightRow
+                  key={index}
+                  type="strength"
+                  text={strength.text}
+                />
+              ))
+            ) : (
+              <InsightRow
+                type="strength"
+                text="Active GitHub contributor"
+              />
+            )}
           </div>
         </div>
 
-        {/* Separator */}
-        <div className="border-t border-dashed border-border/50" />
+        {/* Growth Focus - Private Section (Editor Only) */}
+        {showGrowthFocus && (
+          <>
+            {/* Separator */}
+            <div className="border-t border-dashed border-border/50" />
 
-        {/* Growth */}
-        <div>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-              <TrendingUp size={14} className="text-amber-500" />
-              Growth Focus
-            </h3>
-          </div>
-          <div className="space-y-3 pl-1">
-            <InsightRow
-              type="weakness"
-              text="Documentation coverage is below top-tier standards."
-            />
-            <InsightRow
-              type="weakness"
-              text="Increase visibility by contributing to open source."
-            />
-          </div>
-        </div>
+            {/* Growth */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
+                  <TrendingUp size={14} className="text-amber-500" />
+                  Growth Focus
+                </h3>
+                <span className="text-[10px] font-mono text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded flex items-center gap-1">
+                  <GitCommit size={10} />
+                  Private
+                </span>
+              </div>
+              <div className="space-y-3 pl-1">
+                {insights?.growthAreas && insights.growthAreas.length > 0 ? (
+                  insights.growthAreas.map((growth, index) => (
+                    <InsightRow
+                      key={index}
+                      type="weakness"
+                      text={growth.text}
+                    />
+                  ))
+                ) : (
+                  <InsightRow
+                    type="weakness"
+                    text="Keep building and shipping"
+                  />
+                )}
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
       {/* FOOTER */}

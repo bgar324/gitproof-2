@@ -15,12 +15,25 @@ import {
   ChevronLeft,
   ChevronRight,
   Info,
-  Check,
   Calendar,
   Lock,
   Globe,
+  Globe2, // New icon for Public status
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from "next/link"; // For the profile link
+// Assuming you have a standard Switch component
+// import { Switch } from "@/components/ui/switch";
+
+// Import the server actions
+import {
+  toggleProfilePublic,
+  updateUserBio,
+  generateUserBio,
+  batchUpdateProjectVisibility,
+  updateProjectDescription,
+  generateAIDescription,
+} from "@/app/actions";
 
 // --- HELPERS ---
 const formatDate = (dateString: any) => {
@@ -39,7 +52,15 @@ const getScoreColor = (score: number) => {
 };
 
 // --- 1. REUSABLE REPO CARD (Dashboard Style) ---
-const EditorRepoCard = ({ repo, isSelected, onToggle, onUpdateDesc }: any) => {
+const EditorRepoCard = ({
+  repo,
+  isSelected,
+  onToggle,
+  onUpdateDesc,
+  onRewrite,
+  isRewriting,
+  currentDescription,
+}: any) => {
   return (
     <motion.div
       layout
@@ -156,15 +177,25 @@ const EditorRepoCard = ({ repo, isSelected, onToggle, onUpdateDesc }: any) => {
             {/* 2. AI Editor */}
             <div className="relative">
               <textarea
-                className="w-full bg-secondary/30 hover:bg-secondary/50 focus:bg-background border border-transparent focus:border-primary/30 rounded-lg p-3 text-xs leading-relaxed resize-none outline-none transition-all placeholder:text-muted-foreground/50 font-mono"
+                className="w-full bg-secondary/30 hover:bg-secondary/50 focus:bg-background border border-transparent focus:border-primary/30 rounded-lg p-3 text-xs leading-relaxed resize-none outline-none transition-all placeholder:text-muted-foreground/50 font-mono disabled:opacity-70"
                 rows={4}
                 placeholder="Describe your impact..."
-                defaultValue={repo.aiDescription || repo.desc || ""}
+                value={currentDescription}
                 onChange={(e) => onUpdateDesc(repo.id, e.target.value)}
+                disabled={isRewriting}
               />
               <div className="absolute bottom-2 right-2 flex gap-1">
-                <button className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-background/80 shadow-sm border border-border text-[10px] font-medium text-primary hover:text-primary/80 transition-colors backdrop-blur-sm">
-                  <Sparkles size={10} /> Rewrite
+                <button
+                  onClick={() => onRewrite(repo.id)}
+                  disabled={isRewriting}
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-background/80 shadow-sm border border-border text-[10px] font-medium text-primary hover:text-primary/80 transition-colors backdrop-blur-sm disabled:opacity-70 disabled:cursor-wait"
+                >
+                  {isRewriting ? (
+                    <Loader2 size={10} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={10} />
+                  )}
+                  Rewrite
                 </button>
               </div>
             </div>
@@ -179,27 +210,38 @@ const EditorRepoCard = ({ repo, isSelected, onToggle, onUpdateDesc }: any) => {
 
 export function EditorWorkbench({ section, user, projects = [] }: any) {
   const [isSaving, setIsSaving] = useState(false);
+  const [isBioGenerating, setIsBioGenerating] = useState(false);
 
   // -- Portfolio State --
-  const [featuredIds, setFeaturedIds] = useState<string[]>(
-    projects
-      .filter((p: any) => !p.isHidden)
-      .slice(0, 6)
-      .map((p: any) => p.id)
+  const initialFeaturedIds = projects
+    .filter((p: any) => !p.isHidden)
+    .slice(0, 6)
+    .map((p: any) => p.id) as string[];
+
+  const [featuredIds, setFeaturedIds] = useState<string[]>(initialFeaturedIds);
+
+  // Track description changes: projectId -> new description
+  const [descriptionChanges, setDescriptionChanges] = useState<Map<string, string>>(
+    new Map()
   );
+
+  // Track which project is being rewritten
+  const [rewritingProjectId, setRewritingProjectId] = useState<string | null>(null);
 
   // Library State
   const [searchTerm, setSearchTerm] = useState("");
   const [libraryPage, setLibraryPage] = useState(1);
   const ITEMS_PER_PAGE = 9;
 
-  // -- Bio State --
-  const [bio, setBio] = useState(user?.bio || "");
+  // -- Identity State --
+  const initialBio = user?.bio || "";
+  const [bio, setBio] = useState(initialBio);
+  const [isPublic, setIsPublic] = useState(user?.isPublic || false);
 
   // --- Handlers ---
   const handleToggleRepo = (repo: any) => {
     if (featuredIds.includes(repo.id)) {
-      setFeaturedIds((prev) => prev.filter((id) => id !== repo.id));
+      setFeaturedIds((prev) => prev.filter((id: string) => id !== repo.id));
     } else {
       if (featuredIds.length >= 6) return;
       setFeaturedIds((prev) => [...prev, repo.id]);
@@ -207,19 +249,138 @@ export function EditorWorkbench({ section, user, projects = [] }: any) {
   };
 
   const handleUpdateDesc = (id: string, newDesc: string) => {
-    console.log("Updated", id, newDesc);
+    setDescriptionChanges((prev) => {
+      const updated = new Map(prev);
+      updated.set(id, newDesc);
+      return updated;
+    });
+  };
+
+  const handleRewrite = async (projectId: string) => {
+    setRewritingProjectId(projectId);
+    try {
+      const result = await generateAIDescription(projectId);
+      if (result.success && result.description) {
+        // Update the description in our local state
+        setDescriptionChanges((prev) => {
+          const updated = new Map(prev);
+          updated.set(projectId, result.description);
+          return updated;
+        });
+      }
+    } catch (error) {
+      console.error("Failed to generate AI description:", error);
+      alert("Failed to generate description. Please try again.");
+    } finally {
+      setRewritingProjectId(null);
+    }
+  };
+
+  const handleTogglePublic = async (checked: boolean) => {
+    setIsPublic(checked);
+    try {
+      await toggleProfilePublic(checked);
+    } catch (error) {
+      console.error("Failed to toggle public status:", error);
+      setIsPublic(!checked);
+      alert("Failed to update profile visibility. Please try again.");
+    }
+  };
+
+  const handleGenerateBio = async () => {
+    setIsBioGenerating(true);
+    try {
+      const result = await generateUserBio();
+      if (result.success && result.bio) {
+        setBio(result.bio);
+      }
+    } catch (error) {
+      console.error("Failed to generate bio:", error);
+      alert("Failed to generate bio. Please try again.");
+    } finally {
+      setIsBioGenerating(false);
+    }
   };
 
   const handleSave = async () => {
     setIsSaving(true);
-    await new Promise((r) => setTimeout(r, 1000));
-    setIsSaving(false);
+    try {
+      // 1. Save bio if changed
+      if (bio !== initialBio) {
+        await updateUserBio(bio);
+      }
+
+      // 2. Update project visibility
+      // Hide all projects that are NOT in the featured list
+      const allProjectIds = projects.map((p: any) => p.id) as string[];
+      const hiddenProjectIds = allProjectIds.filter(
+        (id) => !featuredIds.includes(id)
+      );
+
+      // Only call if there are changes to make
+      if (hiddenProjectIds.length > 0 || featuredIds.length > 0) {
+        await batchUpdateProjectVisibility(hiddenProjectIds, featuredIds);
+      }
+
+      // 3. Save all modified project descriptions
+      for (const [projectId, description] of descriptionChanges.entries()) {
+        await updateProjectDescription(projectId, description);
+      }
+
+      // Success! Clear the description changes since they're now saved
+      setDescriptionChanges(new Map());
+
+      alert("All changes saved successfully!");
+    } catch (error) {
+      console.error("Failed to save changes:", error);
+      alert("Failed to save some changes. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   // --- RENDER: IDENTITY TAB ---
   if (section === "identity") {
     return (
       <div className="grid gap-8 relative pb-20 max-w-4xl">
+        {/* NEW: Public Toggle Section */}
+        <div className="flex justify-between items-center p-4 bg-secondary/30 rounded-lg border border-border">
+          <div className="space-y-1">
+            <h4 className="font-medium text-foreground flex items-center gap-2">
+              {isPublic ? (
+                <>
+                  <Globe2 size={16} className="text-emerald-500" /> Profile is
+                  LIVE
+                </>
+              ) : (
+                <>
+                  <Lock size={16} className="text-amber-500" /> Profile is
+                  Private
+                </>
+              )}
+            </h4>
+            <p className="text-xs text-muted-foreground">
+              Toggle to make your GitProof profile viewable at
+              <Link
+                href={`/u/${user.username}`}
+                target="_blank"
+                className="text-primary hover:underline ml-1"
+              >
+                {`/u/${user.username}`}
+              </Link>
+            </p>
+          </div>
+          {/* Public Switch/Checkbox */}
+          <input
+            type="checkbox"
+            checked={isPublic}
+            onChange={(e) => handleTogglePublic(e.target.checked)}
+            className="w-5 h-5 rounded border-gray-300 text-primary focus:ring-primary"
+            title="Toggle Public Profile"
+          />
+        </div>
+
+        {/* Professional Summary Section */}
         <div className="space-y-3">
           <div className="flex justify-between items-center">
             <label className="text-sm font-medium text-foreground">
@@ -231,19 +392,30 @@ export function EditorWorkbench({ section, user, projects = [] }: any) {
           </div>
           <div className="relative group">
             <textarea
-              className="w-full h-32 bg-card border border-border rounded-xl p-4 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all shadow-sm"
+              className="w-full h-32 bg-card border border-border rounded-xl p-4 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/50 transition-all shadow-sm disabled:opacity-70"
               placeholder="e.g. Senior Backend Engineer with a focus on high-throughput systems..."
               value={bio}
               onChange={(e) => setBio(e.target.value)}
+              disabled={isBioGenerating}
             />
-            <div className="absolute bottom-3 right-3 flex gap-2">
-              <button className="text-xs bg-primary/5 text-primary border border-primary/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-primary/10 transition-colors">
-                <Sparkles size={12} /> Auto-Generate
+            <div className="absolute bottom-3 right-3">
+              <button
+                onClick={handleGenerateBio}
+                disabled={isBioGenerating}
+                className="text-xs bg-primary/5 text-primary border border-primary/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-primary/10 transition-colors disabled:opacity-70 disabled:cursor-wait"
+              >
+                {isBioGenerating ? (
+                  <Loader2 size={12} className="animate-spin" />
+                ) : (
+                  <Sparkles size={12} />
+                )}
+                Auto-Generate
               </button>
             </div>
           </div>
         </div>
 
+        {/* Sticky Save Bar (Global Save - will handle Portfolio too) */}
         <div className="fixed bottom-6 right-6 md:right-10 z-50">
           <button
             onClick={handleSave}
@@ -255,7 +427,7 @@ export function EditorWorkbench({ section, user, projects = [] }: any) {
             ) : (
               <Save size={16} />
             )}
-            Save Changes
+            Save All Changes
           </button>
         </div>
       </div>
@@ -317,15 +489,25 @@ export function EditorWorkbench({ section, user, projects = [] }: any) {
                   </p>
                 </div>
               )}
-              {featuredRepos.map((repo: any) => (
-                <EditorRepoCard
-                  key={repo.id}
-                  repo={repo}
-                  isSelected={true}
-                  onToggle={handleToggleRepo}
-                  onUpdateDesc={handleUpdateDesc}
-                />
-              ))}
+              {featuredRepos.map((repo: any) => {
+                const currentDescription =
+                  descriptionChanges.get(repo.id) ||
+                  repo.aiDescription ||
+                  repo.desc ||
+                  "";
+                return (
+                  <EditorRepoCard
+                    key={repo.id}
+                    repo={repo}
+                    isSelected={true}
+                    onToggle={handleToggleRepo}
+                    onUpdateDesc={handleUpdateDesc}
+                    onRewrite={handleRewrite}
+                    isRewriting={rewritingProjectId === repo.id}
+                    currentDescription={currentDescription}
+                  />
+                );
+              })}
             </AnimatePresence>
           </div>
         </div>
@@ -370,6 +552,9 @@ export function EditorWorkbench({ section, user, projects = [] }: any) {
                 isSelected={false}
                 onToggle={handleToggleRepo}
                 onUpdateDesc={handleUpdateDesc}
+                onRewrite={() => {}}
+                isRewriting={false}
+                currentDescription=""
               />
             ))}
           </div>
@@ -412,7 +597,7 @@ export function EditorWorkbench({ section, user, projects = [] }: any) {
             ) : (
               <Save size={16} />
             )}
-            Save Changes
+            Save All Changes
           </button>
         </div>
       </div>
