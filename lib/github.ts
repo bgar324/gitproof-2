@@ -59,9 +59,9 @@ const PROFILE_QUERY = gql`
           forkCount
           updatedAt
           visibility
-          
+
           # Languages
-          languages(first: 5, orderBy: {field: SIZE, direction: DESC}) {
+          languages(first: 5, orderBy: { field: SIZE, direction: DESC }) {
             nodes {
               name
             }
@@ -75,9 +75,19 @@ const PROFILE_QUERY = gql`
               }
             }
           }
-          
+
           # Readme
-          object(expression: "HEAD:README.md") {
+          readmeMd: object(expression: "HEAD:README.md") {
+            ... on Blob {
+              text
+            }
+          }
+          readmeMD: object(expression: "HEAD:README.MD") {
+            ... on Blob {
+              text
+            }
+          }
+          readmeLower: object(expression: "HEAD:readme.md") {
             ... on Blob {
               text
             }
@@ -169,7 +179,11 @@ export async function fetchUserRepos(username: string) {
     forks_count: repo.forkCount,
     pushed_at: repo.updatedAt,
     topics: repo.repositoryTopics?.nodes.map((n: any) => n.topic.name) || [],
-    readme: repo.object?.text || ""
+    readme:
+      repo.readmeMd?.text ||
+      repo.readmeMD?.text ||
+      repo.readmeLower?.text ||
+      "",
   }));
 }
 
@@ -194,7 +208,8 @@ export async function getGitProofData(): Promise<GithubProfile | null> {
           username: user.login,
           image: user.avatarUrl,
           totalContributions:
-            user.contributionsCollection.contributionCalendar.totalContributions,
+            user.contributionsCollection.contributionCalendar
+              .totalContributions,
           pullRequests: user.pullRequests.totalCount,
           repoCount: user.repositories.totalCount,
           streak: calculateStreak(
@@ -240,7 +255,9 @@ function calculateImpactScore(repo: any) {
   const popularity = Math.log2(stars + forks * 2 + 1) * 3;
 
   // 2. Recency
-  const daysSinceUpdate = (new Date().getTime() - new Date(repo.updatedAt).getTime()) / (1000 * 3600 * 24);
+  const daysSinceUpdate =
+    (new Date().getTime() - new Date(repo.updatedAt).getTime()) /
+    (1000 * 3600 * 24);
   let recency = 0;
   if (daysSinceUpdate < 7) recency = 15;
   else if (daysSinceUpdate < 30) recency = 10;
@@ -250,7 +267,7 @@ function calculateImpactScore(repo: any) {
   let maturity = 0;
   if (repo.description && repo.description.length > 20) maturity += 5; // Long description
   if (repo.homepageUrl) maturity += 3; // Homepage (called homepageUrl in GraphQL)
-  
+
   // Check for topics safely
   const hasTopics = repo.repositoryTopics?.nodes?.length > 0;
   if (hasTopics) maturity += 2;
@@ -259,29 +276,46 @@ function calculateImpactScore(repo: any) {
 }
 
 function getTopRepos(repos: any[]) {
-  return repos
-    .map((repo: any) => ({ ...repo, impactScore: calculateImpactScore(repo) }))
-    .sort((a: any, b: any) => b.impactScore - a.impactScore)
-    // .slice(0, 6)
-    .map((repo: any) => ({
-      id: repo.databaseId,
-      name: repo.name,
-      url: repo.url,
-      homepage: repo.homepageUrl,
-      topics: repo.repositoryTopics?.nodes?.map((n: any) => n.topic.name) || [],
-      stars: repo.stargazerCount,
-      forks: repo.forkCount,
-      score: repo.impactScore,
-      breakdown: { stars: repo.stargazerCount, forks: repo.forkCount, updatedAt: repo.updatedAt },
-      readme: repo.object?.text || "",
-      languages: repo.languages?.nodes?.map((n: any) => n.name) || [],
-      language: repo.primaryLanguage?.name || "Markdown",
-      color: repo.primaryLanguage?.color || "#6e7681",
-      desc: repo.description || "",
-      updated: new Date(repo.updatedAt).toLocaleDateString("en-US", { month: "short", day: "numeric" }),
-      lastPush: repo.updatedAt,
-      isPublic: repo.visibility === "PUBLIC",
-    }));
+  return (
+    repos
+      .map((repo: any) => ({
+        ...repo,
+        impactScore: calculateImpactScore(repo),
+      }))
+      .sort((a: any, b: any) => b.impactScore - a.impactScore)
+      // .slice(0, 6)
+      .map((repo: any) => ({
+        id: repo.databaseId,
+        name: repo.name,
+        url: repo.url,
+        homepage: repo.homepageUrl,
+        topics:
+          repo.repositoryTopics?.nodes?.map((n: any) => n.topic.name) || [],
+        stars: repo.stargazerCount,
+        forks: repo.forkCount,
+        score: repo.impactScore,
+        breakdown: {
+          stars: repo.stargazerCount,
+          forks: repo.forkCount,
+          updatedAt: repo.updatedAt,
+        },
+        readme:
+          repo.readmeMd?.text ||
+          repo.readmeMD?.text ||
+          repo.readmeLower?.text ||
+          "",
+        languages: repo.languages?.nodes?.map((n: any) => n.name) || [],
+        language: repo.primaryLanguage?.name || "Markdown",
+        color: repo.primaryLanguage?.color || "#6e7681",
+        desc: repo.description || "",
+        updated: new Date(repo.updatedAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+        }),
+        lastPush: repo.updatedAt,
+        isPublic: repo.visibility === "PUBLIC",
+      }))
+  );
 }
 
 // --- UTILS (No changes) ---
@@ -304,7 +338,10 @@ function calculateHourlyActivity(repos: any[]) {
       hours[date.getHours()]++;
     });
   });
-  return hours.map((count, i) => ({ time: i.toString().padStart(2, "0"), value: count }));
+  return hours.map((count, i) => ({
+    time: i.toString().padStart(2, "0"),
+    value: count,
+  }));
 }
 
 function calculateLanguages(repos: any[]) {
@@ -320,7 +357,11 @@ function calculateLanguages(repos: any[]) {
   });
   if (totalWithLang === 0) return [];
   return Object.entries(langMap)
-    .map(([name, { count, color }]) => ({ name, color, percent: Math.round((count / totalWithLang) * 100) }))
+    .map(([name, { count, color }]) => ({
+      name,
+      color,
+      percent: Math.round((count / totalWithLang) * 100),
+    }))
     .sort((a, b) => b.percent - a.percent)
     .slice(0, 5);
 }
