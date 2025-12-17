@@ -86,7 +86,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
              <div className="w-px h-6 bg-border/50" />
              <button
                onClick={() => signOut({ callbackUrl: "/" })}
-               className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-red-500 transition-colors"
+               className="flex items-center gap-2 text-xs font-medium text-muted-foreground hover:text-red-500 transition-colors hover:cursor-pointer"
              >
                <LogOut size={16} />
                Sign Out
