@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
 import {
@@ -16,7 +16,7 @@ import {
 import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { triggerSync } from "@/app/actions";
+import { triggerSync, deleteUserAccount } from "@/app/actions";
 
 // --- REUSABLE COMPONENTS ---
 
@@ -91,6 +91,12 @@ export default function SettingsView({ user, settings }: any) {
   const [emailNotifs, setEmailNotifs] = useState(initialNotifs);
   const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [confirmUsername, setConfirmUsername] = useState("");
+  const [confirmPhrase, setConfirmPhrase] = useState("");
+  const canDelete =
+    confirmUsername === user.username && confirmPhrase === "Confirm";
 
   // Prevent hydration mismatch for themes
   useEffect(() => setMounted(true), []);
@@ -116,6 +122,25 @@ export default function SettingsView({ user, settings }: any) {
     // TODO: Connect to backend API to persist settings
     // await fetch('/api/user/settings', { ... });
     setTimeout(() => setIsSaving(false), 1000);
+  };
+
+  const handleDeleteAccount = async () => {
+    console.log("🔴 DELETE INITIATED - handleDeleteAccount called");
+    setIsDeleting(true);
+    try {
+      console.log("🔴 Calling deleteUserAccount server action...");
+      const result = await deleteUserAccount();
+      console.log("🔴 deleteUserAccount returned:", result);
+
+      // Sign out and redirect to home after successful deletion
+      console.log("🔴 Signing out...");
+      await signOut({ callbackUrl: "/" });
+    } catch (error) {
+      console.error("🔴 Delete failed in handleDeleteAccount:", error);
+      alert(`Failed to delete account: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+    }
   };
 
   if (!mounted) return null;
@@ -260,18 +285,107 @@ export default function SettingsView({ user, settings }: any) {
 
         {/* --- DANGER ZONE --- */}
         <Section title="Danger Zone" description="Irreversible actions." danger>
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <div>
-              <h4 className="text-sm font-medium text-red-500">
-                Delete Account
-              </h4>
-              <p className="text-xs text-red-500/60 mt-1">
-                Permanently remove all data and revokes GitHub access.
-              </p>
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div>
+                <h4 className="text-sm font-medium text-red-500">
+                  Delete Account
+                </h4>
+                <p className="text-xs text-red-500/60 mt-1">
+                  Permanently remove all data and revokes GitHub access.
+                </p>
+              </div>
+              <button
+                onClick={() => setShowDeleteConfirm(true)}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 size={14} /> Delete
+              </button>
             </div>
-            <button className="px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2">
-              <Trash2 size={14} /> Delete
-            </button>
+
+            {/* Confirmation Dialog */}
+            {showDeleteConfirm && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: "auto" }}
+                className="p-4 bg-red-500/10 border border-red-500/30 rounded-lg space-y-4"
+              >
+                <div className="space-y-1">
+                  <h5 className="text-sm font-bold text-red-500">
+                    Confirm account deletion
+                  </h5>
+                  <p className="text-xs text-red-500/80 leading-relaxed">
+                    This action is irreversible. To proceed, type your username
+                    and the confirmation phrase exactly as shown.
+                  </p>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-red-500">
+                      Type your username
+                    </label>
+                    <input
+                      value={confirmUsername}
+                      onChange={(e) => setConfirmUsername(e.target.value)}
+                      placeholder={user.username}
+                      className="w-full h-9 rounded-md border border-border bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/40"
+                    />
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-medium text-red-500">
+                      Type <span className="font-mono">Confirm</span> to
+                      continue
+                    </label>
+                    <input
+                      value={confirmPhrase}
+                      onChange={(e) => setConfirmPhrase(e.target.value)}
+                      placeholder="Confirm"
+                      className="w-full h-9 rounded-md border border-border bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-red-500/40"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-2 pt-2">
+                  <button
+                    onClick={handleDeleteAccount}
+                    disabled={!canDelete || isDeleting}
+                    className={cn(
+                      "px-4 py-2 text-xs font-bold rounded flex items-center gap-2 transition-colors",
+                      canDelete
+                        ? "bg-red-600 text-white hover:bg-red-700"
+                        : "bg-red-600/40 text-white/60 cursor-not-allowed"
+                    )}
+                  >
+                    {isDeleting ? (
+                      <>
+                        <RefreshCw size={12} className="animate-spin" />
+                        Deleting...
+                      </>
+                    ) : (
+                      <>
+                        <Trash2 size={12} />
+                        Permanently delete account
+                      </>
+                    )}
+                  </button>
+
+                  <button
+                    onClick={() => {
+                      setShowDeleteConfirm(false);
+                      setConfirmUsername("");
+                      setConfirmPhrase("");
+                    }}
+                    disabled={isDeleting}
+                    className="px-4 py-2 bg-secondary text-foreground text-xs font-medium rounded hover:bg-secondary/80 transition-colors disabled:opacity-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </motion.div>
+            )}
           </div>
         </Section>
       </div>

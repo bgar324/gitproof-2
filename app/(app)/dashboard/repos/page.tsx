@@ -2,16 +2,17 @@ import ReposView from "./view";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { syncUserData } from "@/lib/sync";
 
 export default async function AllReposPage() {
   // 1. Auth check
   const session = await auth();
-  if (!session?.user?.email) {
+  if (!session?.user?.email || !session?.user?.username) {
     redirect("/");
   }
 
-  // 2. Fetch from database (not GitHub API!)
-  const user = await db.user.findUnique({
+  // 2. Fetch user and check staleness
+  let user = await db.user.findUnique({
     where: { email: session.user.email },
     include: {
       projects: {
@@ -23,6 +24,35 @@ export default async function AllReposPage() {
 
   if (!user) {
     redirect("/");
+  }
+
+  // 3. Check if cache is stale (> 1 hour old) - same as dashboard
+  const ONE_HOUR = 60 * 60 * 1000;
+  const isStale = !user?.lastSyncedAt ||
+    (Date.now() - user.lastSyncedAt.getTime()) > ONE_HOUR;
+
+  // 4. If stale, sync repos to database
+  if (isStale) {
+    console.log("🔄 Repos are stale, triggering sync...");
+    await syncUserData(
+      session.user.username,
+      session.user.email,
+      session.user.image || ""
+    );
+
+    // Refetch user with updated projects
+    user = await db.user.findUnique({
+      where: { email: session.user.email },
+      include: {
+        projects: {
+          orderBy: { impactScore: 'desc' },
+        },
+      },
+    });
+
+    if (!user) {
+      redirect("/");
+    }
   }
 
   // 3. Map to expected format

@@ -1,5 +1,6 @@
 import { db } from "@/lib/db";
 import { fetchGithubProfile, fetchUserRepos } from "@/lib/github";
+import { sanitizeString, sanitizeStringArray } from "@/lib/sanitize";
 
 // ... keep calculateScore function exactly as is ...
 function calculateScore(repo: any) {
@@ -52,20 +53,21 @@ export async function syncUserData(githubUsername: string, email: string, image:
     const score = calculateScore(repo);
 
     // 2. Sync Project
+    // CRITICAL FIX: Sanitize all string data before DB write
     await db.project.upsert({
       where: {
         userId_githubId: {
           userId: user.id,
-          githubId: repo.id 
+          githubId: repo.id
         }
       },
       update: {
-        name: repo.name,
-        url: repo.html_url,
-        desc: repo.description,
-        homepage: repo.homepage,
-        language: repo.language,
-        topics: repo.topics || [],
+        name: sanitizeString(repo.name),
+        url: sanitizeString(repo.html_url),
+        desc: sanitizeString(repo.description),
+        homepage: sanitizeString(repo.homepage),
+        language: sanitizeString(repo.language),
+        topics: sanitizeStringArray(repo.topics),
         stars: repo.stargazers_count,
         forks: repo.forks_count,
         lastPush: new Date(repo.pushed_at),
@@ -75,12 +77,12 @@ export async function syncUserData(githubUsername: string, email: string, image:
       create: {
         userId: user.id,
         githubId: repo.id,
-        name: repo.name,
-        url: repo.html_url,
-        desc: repo.description,
-        homepage: repo.homepage,
-        language: repo.language,
-        topics: repo.topics || [],
+        name: sanitizeString(repo.name),
+        url: sanitizeString(repo.html_url),
+        desc: sanitizeString(repo.description),
+        homepage: sanitizeString(repo.homepage),
+        language: sanitizeString(repo.language),
+        topics: sanitizeStringArray(repo.topics),
         stars: repo.stargazers_count,
         forks: repo.forks_count,
         lastPush: new Date(repo.pushed_at),

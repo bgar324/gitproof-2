@@ -6,14 +6,7 @@ import { db } from "@/lib/db";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { syncUserData } from "@/lib/sync";
-
-// Helper to sanitize data for PostgreSQL JSON storage
-function sanitizeForPostgres(obj: any): any {
-  const jsonString = JSON.stringify(obj);
-  // Remove null bytes and other problematic Unicode characters
-  const sanitized = jsonString.replace(/\\u0000/g, "").replace(/\u0000/g, "");
-  return JSON.parse(sanitized);
-}
+import { sanitizeString, sanitizeForPostgres } from "@/lib/sanitize";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
@@ -93,9 +86,10 @@ export async function generateRecruiterDescription(
   });
 
   // FIXED: Update using the unique 'id' we found above
+  // CRITICAL FIX: Sanitize AI-generated text before database write
   await db.project.update({
     where: { id: project.id },
-    data: { aiDescription: text },
+    data: { aiDescription: sanitizeString(text) },
   });
 
   revalidatePath("/recruiter");
@@ -146,9 +140,10 @@ export async function updateUserBio(bio: string) {
   const session = await auth();
   if (!session?.user?.email) throw new Error("Not authenticated");
 
+  // CRITICAL FIX: Sanitize user-provided bio before database write
   await db.user.update({
     where: { email: session.user.email },
-    data: { bio },
+    data: { bio: sanitizeString(bio) },
   });
 
   revalidatePath("/editor");
@@ -320,9 +315,10 @@ export async function updateProjectDescription(
   });
   if (!project) throw new Error("Project not found");
 
+  // CRITICAL FIX: Sanitize user-provided description before database write
   await db.project.update({
     where: { id: projectId },
-    data: { aiDescription: description },
+    data: { aiDescription: sanitizeString(description) },
   });
 
   revalidatePath("/editor");
@@ -388,9 +384,10 @@ Output ONLY the rewritten description, nothing else.`,
   });
 
   // Save the AI-generated description
+  // CRITICAL FIX: Sanitize AI-generated text before database write
   await db.project.update({
     where: { id: project.id },
-    data: { aiDescription: text.trim() },
+    data: { aiDescription: sanitizeString(text.trim()) },
   });
 
   revalidatePath("/editor");
@@ -399,4 +396,73 @@ Output ONLY the rewritten description, nothing else.`,
   }
 
   return { success: true, description: text.trim() };
+}
+
+export async function deleteUserAccount() {
+  const session = await auth();
+  if (!session?.user?.email) {
+    console.error("Delete failed: No authenticated session");
+    throw new Error("Not authenticated");
+  }
+
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      projects: true,
+      accounts: true,
+      sessions: true,
+    },
+  });
+
+  if (!user) {
+    console.error("Delete failed: User not found for email:", session.user.email);
+    throw new Error("User not found");
+  }
+
+  console.log(`🗑️  Deleting user account:`, {
+    userId: user.id,
+    email: user.email,
+    username: user.username,
+    projectCount: user.projects.length,
+    accountCount: user.accounts.length,
+    sessionCount: user.sessions.length,
+  });
+
+  try {
+    // Delete in explicit order to avoid any foreign key issues
+    console.log("🗑️  Step 1: Deleting sessions...");
+    const deletedSessions = await db.session.deleteMany({
+      where: { userId: user.id },
+    });
+    console.log(`✅ Deleted ${deletedSessions.count} sessions`);
+
+    console.log("🗑️  Step 2: Deleting projects...");
+    const deletedProjects = await db.project.deleteMany({
+      where: { userId: user.id },
+    });
+    console.log(`✅ Deleted ${deletedProjects.count} projects`);
+
+    console.log("🗑️  Step 3: Deleting accounts...");
+    const deletedAccounts = await db.account.deleteMany({
+      where: { userId: user.id },
+    });
+    console.log(`✅ Deleted ${deletedAccounts.count} accounts`);
+
+    console.log("🗑️  Step 4: Deleting user...");
+    const deleted = await db.user.delete({
+      where: { id: user.id },
+    });
+    console.log("✅ User deleted:", deleted.id);
+
+    console.log("✅✅✅ ACCOUNT DELETION COMPLETE ✅✅✅");
+    return { success: true };
+  } catch (error: any) {
+    console.error("❌ Delete user failed:", error);
+    console.error("❌ Error details:", {
+      message: error.message,
+      code: error.code,
+      meta: error.meta,
+    });
+    throw new Error(`Failed to delete account: ${error.message}`);
+  }
 }

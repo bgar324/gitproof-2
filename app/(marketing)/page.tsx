@@ -707,7 +707,7 @@ export default function LandingPage() {
               How Scoring Works
             </Link>
             <a
-              href="https://github.com"
+              href="https://github.com/bgar324/gitproof-2"
               target="_blank"
               rel="noopener noreferrer"
               className="hover:text-primary transition-colors"

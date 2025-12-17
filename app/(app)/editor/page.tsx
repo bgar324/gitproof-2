@@ -5,13 +5,14 @@ import { ReportCard } from "@/components/report-card";
 import { EditorWorkbench } from "./view";
 import { calculateUserStats, analyzeUserInsights } from "@/lib/stats";
 import Link from "next/link";
-import { TrendingUp, GitCommit, Info } from "lucide-react";
+import { TrendingUp, GitCommit, Info, Lock } from "lucide-react";
 
 export default async function EditorPage() {
   const session = await auth();
   if (!session?.user?.email) return redirect("/");
 
-  const user = await db.user.findUnique({
+  // Fetch user with ALL projects (for portfolio editor)
+  const userWithAllProjects = await db.user.findUnique({
     where: { email: session.user.email },
     include: {
       projects: {
@@ -20,11 +21,24 @@ export default async function EditorPage() {
     },
   });
 
-  if (!user) return redirect("/");
+  if (!userWithAllProjects) return redirect("/");
 
-  // Calculate real stats and insights
-  const stats = calculateUserStats(user);
-  const insights = analyzeUserInsights(user, stats);
+  // Fetch user with VISIBLE projects only (for report card stats)
+  const userWithVisibleProjects = await db.user.findUnique({
+    where: { email: session.user.email },
+    include: {
+      projects: {
+        where: { isHidden: false },
+        orderBy: { impactScore: "desc" },
+      },
+    },
+  });
+
+  if (!userWithVisibleProjects) return redirect("/");
+
+  // Calculate stats based on VISIBLE projects only (matches public profile)
+  const stats = calculateUserStats(userWithVisibleProjects);
+  const insights = analyzeUserInsights(userWithVisibleProjects, stats);
 
   return (
     <main className="min-h-[calc(100vh-64px)] bg-background flex flex-col md:flex-row overflow-hidden">
@@ -50,7 +64,7 @@ export default async function EditorPage() {
 
           {/* Report Card */}
           <ReportCard
-            user={user}
+            user={userWithVisibleProjects}
             stats={stats}
             insights={insights}
             showGrowthFocus={false}
@@ -65,7 +79,7 @@ export default async function EditorPage() {
                 Growth Focus
               </h3>
               <span className="text-[10px] font-mono text-amber-600 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded flex items-center gap-1">
-                <GitCommit size={10} />
+                <Lock size={10} />
                 Private
               </span>
             </div>
@@ -106,7 +120,7 @@ export default async function EditorPage() {
                 </p>
               </div>
             </div>
-            <EditorWorkbench section="identity" user={user} />
+            <EditorWorkbench section="identity" user={userWithVisibleProjects} />
           </div>
 
           {/* Portfolio Section */}
@@ -118,12 +132,12 @@ export default async function EditorPage() {
                   Curate your best work.
                 </p>
               </div>
-              {/* FIXED: Just show total available here, detailed counts are in the Workbench */}
+              {/* Show ALL repositories (including hidden) for management */}
               <span className="text-xs font-mono text-muted-foreground">
-                {user.projects.length} Repositories Found
+                {userWithAllProjects.projects.length} Repositories Found
               </span>
             </div>
-            <EditorWorkbench section="portfolio" projects={user.projects} />
+            <EditorWorkbench section="portfolio" projects={userWithAllProjects.projects} />
           </div>
         </div>
       </section>

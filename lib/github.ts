@@ -1,5 +1,12 @@
 import { auth } from "@/auth";
 import { GraphQLClient, gql } from "graphql-request";
+import {
+  checkRateLimit,
+  parseGitHubError,
+  setRateLimit,
+  GitHubRateLimitError,
+  withRetry,
+} from "@/lib/rate-limit";
 
 const GITHUB_ENDPOINT = "https://api.github.com/graphql";
 
@@ -104,11 +111,35 @@ const PROFILE_QUERY = gql`
 // --- HELPER: Get Authenticated Client ---
 async function getClient() {
   const session = await auth();
-  const token = (session as any)?.accessToken;
-  if (!token) throw new Error("No access token found.");
-  
+  if (!session?.user?.email) {
+    throw new Error("No authenticated session found.");
+  }
+
+  // CRITICAL FIX: Check rate limit before making request
+  checkRateLimit(session.user.email);
+
+  // CRITICAL FIX: Fetch access token from database instead of session
+  // This prevents token exposure in client-side cookies
+  const { db } = await import("@/lib/db");
+
+  const account = await db.account.findFirst({
+    where: {
+      user: {
+        email: session.user.email,
+      },
+      provider: "github",
+    },
+    select: {
+      access_token: true,
+    },
+  });
+
+  if (!account?.access_token) {
+    throw new Error("No GitHub access token found. Please re-authenticate.");
+  }
+
   return new GraphQLClient(GITHUB_ENDPOINT, {
-    headers: { authorization: `Bearer ${token}` },
+    headers: { authorization: `Bearer ${account.access_token}` },
   });
 }
 
@@ -148,29 +179,55 @@ export async function fetchRepoReadme(username: string, repo: string) {
 
 // --- DASHBOARD EXPORTS ---
 export async function getGitProofData(): Promise<GithubProfile | null> {
-  const client = await getClient();
-
   try {
-    const data: any = await client.request(PROFILE_QUERY);
-    const user = data.viewer;
-    const repos = user.repositories.nodes;
+    // CRITICAL FIX: Wrap in retry logic with rate limit handling
+    return await withRetry(async () => {
+      const session = await auth();
+      const client = await getClient();
 
-    return {
-      username: user.login,
-      image: user.avatarUrl,
-      totalContributions: user.contributionsCollection.contributionCalendar.totalContributions,
-      pullRequests: user.pullRequests.totalCount,
-      repoCount: user.repositories.totalCount,
-      streak: calculateStreak(user.contributionsCollection.contributionCalendar.weeks),
-      topLanguages: calculateLanguages(repos),
-      hourlyActivity: calculateHourlyActivity(repos),
-      heatmap: user.contributionsCollection.contributionCalendar.weeks
-        .flatMap((w: any) => w.contributionDays)
-        .map((d: any) => ({ date: d.date, count: d.contributionCount })),
-      topRepos: getTopRepos(repos),
-    };
-  } catch (error) {
+      try {
+        const data: any = await client.request(PROFILE_QUERY);
+        const user = data.viewer;
+        const repos = user.repositories.nodes;
+
+        return {
+          username: user.login,
+          image: user.avatarUrl,
+          totalContributions:
+            user.contributionsCollection.contributionCalendar.totalContributions,
+          pullRequests: user.pullRequests.totalCount,
+          repoCount: user.repositories.totalCount,
+          streak: calculateStreak(
+            user.contributionsCollection.contributionCalendar.weeks
+          ),
+          topLanguages: calculateLanguages(repos),
+          hourlyActivity: calculateHourlyActivity(repos),
+          heatmap: user.contributionsCollection.contributionCalendar.weeks
+            .flatMap((w: any) => w.contributionDays)
+            .map((d: any) => ({ date: d.date, count: d.contributionCount })),
+          topRepos: getTopRepos(repos),
+        };
+      } catch (error: any) {
+        // CRITICAL FIX: Parse and handle rate limit errors
+        const { isRateLimit, resetAt } = parseGitHubError(error);
+
+        if (isRateLimit && resetAt && session?.user?.email) {
+          setRateLimit(session.user.email, resetAt);
+          throw new GitHubRateLimitError(resetAt);
+        }
+
+        throw error;
+      }
+    });
+  } catch (error: any) {
+    // Log error for debugging but don't expose internal details
     console.error("Failed to fetch GitHub data:", error);
+
+    // Re-throw rate limit errors so UI can display them
+    if (error instanceof GitHubRateLimitError) {
+      throw error;
+    }
+
     return null;
   }
 }

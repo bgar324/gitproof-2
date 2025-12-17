@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { sanitizeString, sanitizeStringArray, sanitizeForPostgres } from "@/lib/sanitize";
 
 export async function POST(req: Request) {
   // 1. Authenticate (Security Check)
@@ -24,12 +25,13 @@ export async function POST(req: Request) {
 
     // 2. Update User Stats (The JSON Blob)
     // We store the heavy visual data (heatmap) in a single JSON column
+    // CRITICAL FIX: Sanitize all data before database write
     await db.user.update({
       where: { email: session.user.email },
       data: {
-        username: username, // Ensure username is synced
+        username: sanitizeString(username), // Ensure username is synced and sanitized
         lastSyncedAt: new Date(),
-        profileData: {
+        profileData: sanitizeForPostgres({
           heatmap,
           totalContributions,
           pullRequests,
@@ -37,7 +39,7 @@ export async function POST(req: Request) {
           streak,
           topLanguages,
           hourlyActivity: data.hourlyActivity
-        },
+        }) as any,
       },
     });
 
@@ -49,6 +51,7 @@ export async function POST(req: Request) {
     if (user) {
       for (const repo of topRepos) {
         // We assume 'repo' has the structure from your formatRepos function
+        // CRITICAL FIX: Sanitize all string data before database write
         await db.project.upsert({
           where: {
             userId_githubId: {
@@ -57,32 +60,32 @@ export async function POST(req: Request) {
             },
           },
           update: {
-            name: repo.name,
-            desc: repo.desc,
-            url: repo.url,
-            homepage: repo.homepage,
-            language: repo.language,
-            topics: repo.topics,
+            name: sanitizeString(repo.name),
+            desc: sanitizeString(repo.desc),
+            url: sanitizeString(repo.url),
+            homepage: sanitizeString(repo.homepage),
+            language: sanitizeString(repo.language),
+            topics: sanitizeStringArray(repo.topics),
             stars: repo.stars,
             forks: repo.forks,
             lastPush: repo.lastPush ? new Date(repo.lastPush) : new Date(),
             impactScore: repo.score, // Map 'score' to 'impactScore'
-            readme: repo.readme,
+            readme: sanitizeString(repo.readme),
           },
           create: {
             userId: user.id,
             githubId: repo.id || 0, // Fallback if ID is missing (should verify this in frontend)
-            name: repo.name,
-            desc: repo.desc,
-            url: repo.url,
-            homepage: repo.homepage,
-            language: repo.language,
-            topics: repo.topics,
+            name: sanitizeString(repo.name),
+            desc: sanitizeString(repo.desc),
+            url: sanitizeString(repo.url),
+            homepage: sanitizeString(repo.homepage),
+            language: sanitizeString(repo.language),
+            topics: sanitizeStringArray(repo.topics),
             stars: repo.stars,
             forks: repo.forks,
             lastPush: repo.lastPush ? new Date(repo.lastPush) : new Date(),
             impactScore: repo.score,
-            readme: repo.readme,
+            readme: sanitizeString(repo.readme),
           },
         });
       }

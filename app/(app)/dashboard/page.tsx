@@ -4,19 +4,14 @@ import DashboardView from "./view";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-
-// Helper to sanitize data for PostgreSQL JSON storage
-function sanitizeForPostgres(obj: any): any {
-  const jsonString = JSON.stringify(obj);
-  // Remove null bytes and other problematic Unicode characters
-  const sanitized = jsonString.replace(/\\u0000/g, '').replace(/\u0000/g, '');
-  return JSON.parse(sanitized);
-}
+import { syncUserData } from "@/lib/sync";
+import { GitHubRateLimitError } from "@/lib/rate-limit";
+import { sanitizeForPostgres } from "@/lib/sanitize";
 
 export default async function DashboardPage() {
   // 1. Auth check
   const session = await auth();
-  if (!session?.user?.email) {
+  if (!session?.user?.email || !session?.user?.username) {
     redirect("/");
   }
 
@@ -38,22 +33,62 @@ export default async function DashboardPage() {
 
   // 4. Fetch fresh data if stale or missing
   if (!user || !user.profileData || isStale) {
-    const freshData = await getGitProofData();
-    if (!freshData) {
+    console.log("🔄 Data is stale, syncing repos to database...");
+
+    try {
+      // Sync repos to projects table
+      await syncUserData(
+        session.user.username,
+        session.user.email,
+        session.user.image || ""
+      );
+
+      // Fetch fresh data for dashboard
+      const freshData = await getGitProofData();
+      if (!freshData) {
+        redirect("/");
+      }
+
+      // 5. Save to cache (sanitize to remove null bytes)
+      const sanitizedData = sanitizeForPostgres(freshData);
+      await db.user.update({
+        where: { email: session.user.email },
+        data: {
+          profileData: sanitizedData as any,
+          lastSyncedAt: new Date(),
+        },
+      });
+
+      return <DashboardView data={freshData} lastSyncedAt={new Date()} />;
+    } catch (error: any) {
+      // CRITICAL FIX: Handle rate limit errors gracefully
+      if (error instanceof GitHubRateLimitError) {
+        // Return error state view instead of crashing
+        return (
+          <div className="min-h-screen flex items-center justify-center p-6">
+            <div className="max-w-md w-full bg-card border border-red-500/20 rounded-xl p-8 text-center space-y-4">
+              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto">
+                <span className="text-3xl">⏱️</span>
+              </div>
+              <h2 className="text-xl font-bold text-foreground">
+                Rate Limit Reached
+              </h2>
+              <p className="text-muted-foreground text-sm leading-relaxed">
+                {error.message}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                GitHub limits API requests to prevent abuse. Your data will sync
+                automatically after the limit resets.
+              </p>
+            </div>
+          </div>
+        );
+      }
+
+      // For other errors, redirect to home
+      console.error("Dashboard sync error:", error);
       redirect("/");
     }
-
-    // 5. Save to cache (sanitize to remove null bytes)
-    const sanitizedData = sanitizeForPostgres(freshData);
-    await db.user.update({
-      where: { email: session.user.email },
-      data: {
-        profileData: sanitizedData as any,
-        lastSyncedAt: new Date(),
-      },
-    });
-
-    return <DashboardView data={freshData} lastSyncedAt={new Date()} />;
   }
 
   // 6. Use cached data + live projects from DB
