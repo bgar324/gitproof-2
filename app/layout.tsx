@@ -4,6 +4,7 @@ import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
 import { Navbar } from "@/components/Navbar";
+import { Providers } from "@/components/providers";
 
 // Load Instrument Serif from Google
 const instrument = Instrument_Serif({ 
@@ -17,7 +18,7 @@ export const metadata: Metadata = {
   title: "GitProof | Recruiter-Ready GitHub Reports",
   description: "Transform your GitHub activity into professional, data-driven PDF reports for job applications.",
   icons: {
-    icon: "/favicon.ico", // Ensure you have a favicon
+    icon: "static/favicon.svg", // Ensure you have a favicon
   },
 };
 
@@ -37,18 +38,20 @@ export default function RootLayout({
           text-foreground
         `}
       >
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          {/* Navbar sits outside the template, so it doesn't re-animate on navigation */}
-          {/* <Navbar /> */}
-          
-          {/* Children (Page Content) will be wrapped by template.tsx automatically */}
-          {children}
-        </ThemeProvider>
+        <Providers>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            {/* Navbar sits outside the template, so it doesn't re-animate on navigation */}
+            {/* <Navbar /> */}
+
+            {/* Children (Page Content) will be wrapped by template.tsx automatically */}
+            {children}
+          </ThemeProvider>
+        </Providers>
       </body>
     </html>
   );

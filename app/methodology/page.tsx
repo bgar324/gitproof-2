@@ -1,37 +1,25 @@
 import Link from "next/link";
 import {
   BookOpen,
-  ArrowLeft,
-  GitGraph,
   BarChart3,
   TrendingUp,
   Zap,
   Trophy,
 } from "lucide-react";
+import { auth } from "@/auth";
+import { MethodologyNavbar } from "@/components/methodology-navbar";
 
-export default function MethodologyPage() {
+export default async function MethodologyPage() {
+  const session = await auth();
+  const isAuthenticated = !!session?.user;
+
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
-      <header className="border-b border-border bg-background/95 backdrop-blur sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
-          <Link
-            href="/editor"
-            className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors"
-          >
-            <ArrowLeft size={16} />
-            Back to Editor
-          </Link>
-          <Link href="/dashboard" className="flex items-center gap-2 group">
-            <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 transition-transform group-hover:scale-105">
-              <GitGraph size={18} />
-            </div>
-            <span className="font-serif font-bold text-lg tracking-tight">
-              GitProof
-            </span>
-          </Link>
-        </div>
-      </header>
+      {/* Navbar */}
+      <MethodologyNavbar isAuthenticated={isAuthenticated} />
+
+      {/* Add top padding to account for fixed navbar */}
+      <div className="pt-16"></div>
 
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-6 py-16">
