@@ -289,10 +289,11 @@ export default function SettingsView({ user, settings }: any) {
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <div>
                 <h4 className="text-sm font-medium text-red-500">
-                  Delete Account
+                  Delete Account & Revoke OAuth
                 </h4>
                 <p className="text-xs text-red-500/60 mt-1">
-                  Permanently remove all data and revokes GitHub access.
+                  Permanently deletes all data, revokes GitHub OAuth, and clears
+                  all sessions. You'll start from scratch if you return.
                 </p>
               </div>
               <button
@@ -313,11 +314,12 @@ export default function SettingsView({ user, settings }: any) {
               >
                 <div className="space-y-1">
                   <h5 className="text-sm font-bold text-red-500">
-                    Confirm account deletion
+                    Confirm complete account deletion
                   </h5>
                   <p className="text-xs text-red-500/80 leading-relaxed">
-                    This action is irreversible. To proceed, type your username
-                    and the confirmation phrase exactly as shown.
+                    This will permanently delete all your data AND revoke GitHub
+                    OAuth authorization. You'll need to re-authorize if you sign
+                    up again. Type your username and confirmation phrase to proceed.
                   </p>
                 </div>
 

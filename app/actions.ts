@@ -419,7 +419,7 @@ export async function deleteUserAccount() {
     throw new Error("User not found");
   }
 
-  console.log(`🗑️  Deleting user account:`, {
+  console.log(`🗑️  COMPLETE ACCOUNT OBLITERATION INITIATED:`, {
     userId: user.id,
     email: user.email,
     username: user.username,
@@ -429,35 +429,105 @@ export async function deleteUserAccount() {
   });
 
   try {
-    // Delete in explicit order to avoid any foreign key issues
-    console.log("🗑️  Step 1: Deleting sessions...");
+    // STEP 0: Revoke GitHub OAuth GRANT (forces re-authorization)
+    console.log("🗑️  Step 0: Revoking GitHub OAuth authorization grant...");
+    const githubAccount = user.accounts.find((acc) => acc.provider === "github");
+
+    if (githubAccount?.access_token) {
+      try {
+        const clientId = process.env.AUTH_GITHUB_ID;
+        const clientSecret = process.env.AUTH_GITHUB_SECRET;
+
+        if (clientId && clientSecret) {
+          const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+
+          // First, revoke the authorization grant (removes app from authorized apps)
+          console.log("🗑️  Revoking authorization grant...");
+          const grantResponse = await fetch(
+            `https://api.github.com/applications/${clientId}/grant`,
+            {
+              method: "DELETE",
+              headers: {
+                "Authorization": `Basic ${basicAuth}`,
+                "Accept": "application/vnd.github+json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                access_token: githubAccount.access_token,
+              }),
+            }
+          );
+
+          if (grantResponse.ok || grantResponse.status === 404) {
+            console.log("✅ GitHub authorization grant revoked (user must re-authorize)");
+          } else {
+            const errorText = await grantResponse.text();
+            console.warn(`⚠️  Grant revocation returned ${grantResponse.status}:`, errorText);
+
+            // Fallback: Try revoking just the token
+            console.log("🗑️  Falling back to token revocation...");
+            const tokenResponse = await fetch(
+              `https://api.github.com/applications/${clientId}/token`,
+              {
+                method: "DELETE",
+                headers: {
+                  "Authorization": `Basic ${basicAuth}`,
+                  "Accept": "application/vnd.github+json",
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  access_token: githubAccount.access_token,
+                }),
+              }
+            );
+
+            if (tokenResponse.ok || tokenResponse.status === 404) {
+              console.log("✅ GitHub token revoked (grant revocation failed)");
+            } else {
+              console.warn(`⚠️  Token revocation returned ${tokenResponse.status}`);
+            }
+          }
+        }
+      } catch (revokeError) {
+        console.warn("⚠️  GitHub OAuth revocation failed (non-critical):", revokeError);
+        // Continue with deletion even if revocation fails
+      }
+    }
+
+    // STEP 1: Delete all sessions (logs user out everywhere)
+    console.log("🗑️  Step 1: Deleting all sessions...");
     const deletedSessions = await db.session.deleteMany({
       where: { userId: user.id },
     });
-    console.log(`✅ Deleted ${deletedSessions.count} sessions`);
+    console.log(`✅ Obliterated ${deletedSessions.count} sessions`);
 
-    console.log("🗑️  Step 2: Deleting projects...");
+    // STEP 2: Delete all projects
+    console.log("🗑️  Step 2: Deleting all projects...");
     const deletedProjects = await db.project.deleteMany({
       where: { userId: user.id },
     });
-    console.log(`✅ Deleted ${deletedProjects.count} projects`);
+    console.log(`✅ Obliterated ${deletedProjects.count} projects`);
 
-    console.log("🗑️  Step 3: Deleting accounts...");
+    // STEP 3: Delete all OAuth accounts
+    console.log("🗑️  Step 3: Deleting all OAuth accounts...");
     const deletedAccounts = await db.account.deleteMany({
       where: { userId: user.id },
     });
-    console.log(`✅ Deleted ${deletedAccounts.count} accounts`);
+    console.log(`✅ Obliterated ${deletedAccounts.count} OAuth accounts`);
 
-    console.log("🗑️  Step 4: Deleting user...");
+    // STEP 4: Delete the user record
+    console.log("🗑️  Step 4: Deleting user record...");
     const deleted = await db.user.delete({
       where: { id: user.id },
     });
-    console.log("✅ User deleted:", deleted.id);
+    console.log(`✅ Obliterated user: ${deleted.id}`);
 
-    console.log("✅✅✅ ACCOUNT DELETION COMPLETE ✅✅✅");
+    console.log("💥💥💥 ACCOUNT COMPLETELY OBLITERATED 💥💥💥");
+    console.log("User must re-authorize GitHub OAuth to sign in again");
+
     return { success: true };
   } catch (error: any) {
-    console.error("❌ Delete user failed:", error);
+    console.error("❌ Account obliteration failed:", error);
     console.error("❌ Error details:", {
       message: error.message,
       code: error.code,
