@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { signOut } from "next-auth/react";
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Toaster } from "sonner";
 
 const NAV_ITEMS = [
   {
@@ -158,6 +159,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex-1 w-full">
         {children}
       </div>
+
+      {/* Toast Notifications */}
+      <Toaster position="bottom-right" richColors />
 
     </div>
   );

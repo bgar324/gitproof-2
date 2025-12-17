@@ -72,7 +72,7 @@ export async function generateRecruiterDescription(
   if (!project) throw new Error("Project not found");
 
   const { text } = await generateText({
-    model: google("gemini-2.5-flash"),
+    model: google("gemini-2.5-flash-lite"),
     prompt: `
       Act as a Senior Technical Recruiter at a FAANG company.
       Rewrite this project description to be impactful, result-oriented, and quantitative.
@@ -141,9 +141,22 @@ export async function updateUserBio(bio: string) {
   if (!session?.user?.email) throw new Error("Not authenticated");
 
   // CRITICAL FIX: Sanitize user-provided bio before database write
-  await db.user.update({
+  const sanitizedBio = sanitizeString(bio);
+  console.log("📝 Updating bio:", {
+    originalLength: bio.length,
+    sanitizedLength: sanitizedBio.length,
+    email: session.user.email,
+    username: session.user.username,
+  });
+
+  const updatedUser = await db.user.update({
     where: { email: session.user.email },
-    data: { bio: sanitizeString(bio) },
+    data: { bio: sanitizedBio },
+  });
+
+  console.log("✅ Bio updated successfully:", {
+    bioLength: updatedUser.bio?.length,
+    username: updatedUser.username,
   });
 
   revalidatePath("/editor");
@@ -198,7 +211,7 @@ export async function generateUserBio() {
     .join("\n");
 
   const { text } = await generateText({
-    model: google("gemini-2.5-flash"),
+    model: google("gemini-2.5-flash-lite"),
     prompt: `You are a senior technical recruiter writing a professional bio for a developer's portfolio.
 
 Developer Context:
@@ -219,6 +232,7 @@ Instructions:
 6. Make it sound human and authentic, not robotic
 7. Don't use clichés like "passionate about" or "dedicated to"
 8. Focus on what they DO and BUILD, not abstract qualities
+9. Don't put their username in this bio. Just their name.
 
 Output ONLY the bio text, nothing else.`,
   });
@@ -355,7 +369,7 @@ export async function generateAIDescription(projectId: string) {
   };
 
   const { text } = await generateText({
-    model: google("gemini-2.5-flash"),
+    model: google("gemini-2.5-flash-lite"),
     prompt: `You are a senior technical recruiter at a top tech company. Your job is to rewrite project descriptions to be compelling, quantitative, and results-oriented.
 
 Project Context:

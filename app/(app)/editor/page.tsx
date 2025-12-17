@@ -108,37 +108,11 @@ export default async function EditorPage() {
 
       {/* RIGHT: Workbench */}
       <section className="flex-1 h-[calc(100vh-64px)] overflow-y-auto bg-background">
-        {/* REDUCED SPACING: space-y-12 -> space-y-8 */}
-        <div className="w-full h-full p-6 md:p-10 pb-32 space-y-8">
-          {/* Identity Section */}
-          <div className="space-y-6">
-            <div className="flex justify-between items-end border-b border-border pb-4">
-              <div>
-                <h2 className="font-serif text-2xl">Identity</h2>
-                <p className="text-sm text-muted-foreground">
-                  Define your stack and professional summary.
-                </p>
-              </div>
-            </div>
-            <EditorWorkbench section="identity" user={userWithVisibleProjects} />
-          </div>
-
-          {/* Portfolio Section */}
-          <div className="space-y-6">
-            <div className="flex justify-between items-end border-b border-border pb-4">
-              <div>
-                <h2 className="font-serif text-2xl">Portfolio</h2>
-                <p className="text-sm text-muted-foreground">
-                  Curate your best work.
-                </p>
-              </div>
-              {/* Show ALL repositories (including hidden) for management */}
-              <span className="text-xs font-mono text-muted-foreground">
-                {userWithAllProjects.projects.length} Repositories Found
-              </span>
-            </div>
-            <EditorWorkbench section="portfolio" projects={userWithAllProjects.projects} />
-          </div>
+        <div className="w-full h-full p-6 md:p-10">
+          <EditorWorkbench
+            user={userWithVisibleProjects}
+            projects={userWithAllProjects.projects}
+          />
         </div>
       </section>
     </main>
