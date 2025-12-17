@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import { syncUserData } from "@/lib/sync";
 import { GitHubRateLimitError } from "@/lib/rate-limit";
 import { sanitizeForPostgres } from "@/lib/sanitize";
+import { getLanguageColor } from "@/lib/language-colors";
 
 export default async function DashboardPage() {
   // 1. Auth check
@@ -104,7 +105,7 @@ export default async function DashboardPage() {
     forks: p.forks,
     score: p.impactScore,
     language: p.language || "Markdown",
-    color: "#6e7681",
+    color: getLanguageColor(p.language),
     topics: p.topics,
     readme: p.readme || "",
     homepage: p.homepage,

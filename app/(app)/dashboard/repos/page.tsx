@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { syncUserData } from "@/lib/sync";
+import { getLanguageColor } from "@/lib/language-colors";
 
 export default async function AllReposPage() {
   // 1. Auth check
@@ -65,7 +66,7 @@ export default async function AllReposPage() {
     forks: p.forks,
     score: p.impactScore,
     language: p.language || "Markdown",
-    color: "#6e7681", // Default gray
+    color: getLanguageColor(p.language),
     topics: p.topics,
     readme: p.readme || "",
     homepage: p.homepage,

@@ -90,13 +90,15 @@ export function ReportCard({
   stats,
   insights,
   showGrowthFocus = false,
-  className
+  className,
+  totalRepoCount
 }: {
   user: any;
   stats: any;
   insights?: UserInsights;
   showGrowthFocus?: boolean;
   className?: string;
+  totalRepoCount?: number;
 }) {
   // 1. Enhanced Archetype Logic (Icon + Title + Color)
   const getArchetype = () => {
@@ -151,12 +153,12 @@ export function ReportCard({
     }
 
     // 4. THE STREAK MASTER (Incredible consistency)
-    if (streak >= 100 || stats.consistency >= 95) {
+    if (streak >= 100 || stats.consistency >= 85) {
       return { title: "The Streak Master", icon: Lightning, color: "text-yellow-500" };
     }
 
     // 5. THE MACHINE (Very high consistency)
-    if (stats.consistency >= 85) {
+    if (stats.consistency >= 70) {
       return { title: "The Machine", icon: Cpu, color: "text-blue-500" };
     }
 
@@ -176,7 +178,7 @@ export function ReportCard({
     }
 
     // 9. THE CRAFTSPERSON (Good documentation)
-    if (documentationRate >= 0.6 && stats.impactScore >= 20) {
+    if (documentationRate >= 0.6 && stats.impactScore >= 15) {
       return { title: "The Craftsperson", icon: Sparkles, color: "text-cyan-500" };
     }
 
@@ -195,18 +197,19 @@ export function ReportCard({
       return { title: "The Polyglot", icon: Globe, color: "text-indigo-500" };
     }
 
-    // 13. THE ARCHITECT (Many projects)
-    if (stats.repoCount >= 25) {
+    // 13. THE ARCHITECT (Many projects - based on TOTAL repos, not just visible)
+    const totalRepos = totalRepoCount ?? stats.repoCount;
+    if (totalRepos >= 20) {
       return { title: "The Architect", icon: Layers, color: "text-slate-500" };
     }
 
-    // 14. THE BUILDER (Good amount of projects)
-    if (stats.repoCount >= 15) {
+    // 14. THE BUILDER (Good amount of projects - based on TOTAL repos, not just visible)
+    if (totalRepos >= 12) {
       return { title: "The Builder", icon: Blocks, color: "text-teal-500" };
     }
 
     // 15. THE MAINTAINER (Long-term commitment)
-    if (stats.repoCount >= 10 && stats.consistency >= 60) {
+    if (stats.repoCount >= 10 && stats.consistency >= 50) {
       return { title: "The Maintainer", icon: Shield, color: "text-blue-600" };
     }
 
@@ -220,12 +223,22 @@ export function ReportCard({
       return { title: "The Automator", icon: Workflow, color: "text-purple-600" };
     }
 
+    // 17. THE CONTRIBUTOR (Active PR contributor)
+    if (pullRequests >= 30) {
+      return { title: "The Contributor", icon: GitPullRequest, color: "text-lime-500" };
+    }
+
+    // 18. ACTIVE BUILDER (Solid activity)
+    if (stats.impactScore >= 15) {
+      return { title: "Active Builder", icon: Blocks, color: "text-sky-500" };
+    }
+
     // DEFAULT: Based on general activity level
-    if (stats.impactScore >= 25) {
+    if (stats.impactScore >= 20) {
       return { title: "Rising Star", icon: Rocket, color: "text-amber-500" };
     }
 
-    if (stats.repoCount >= 5) {
+    if (stats.repoCount >= 5 && stats.impactScore >= 10) {
       return { title: "Full Stack Dev", icon: Code2, color: "text-primary" };
     }
 

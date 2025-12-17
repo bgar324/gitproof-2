@@ -213,7 +213,7 @@ export default function SettingsView({ user, settings }: any) {
                 className="p-3 bg-secondary/30 rounded-lg border border-border flex items-center justify-between text-xs"
               >
                 <span className="text-muted-foreground truncate">
-                  gitproof.com/u/{user.username || "username"}
+                  gitproof-2.vercel.app/u/{user.username || "username"}
                 </span>
                 <a
                   href={`/u/${user.username}`}

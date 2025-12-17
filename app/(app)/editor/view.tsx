@@ -23,6 +23,7 @@ import {
 import { cn } from "@/lib/utils";
 import Link from "next/link"; // For the profile link
 import { toast } from "sonner";
+import { getLanguageColor } from "@/lib/language-colors";
 // Assuming you have a standard Switch component
 // import { Switch } from "@/components/ui/switch";
 
@@ -110,7 +111,10 @@ const EditorRepoCard = ({
               {/* Library Mode: Show simple language tag immediately */}
               {!isSelected && (
                 <div className="text-[10px] text-muted-foreground mt-1 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: getLanguageColor(repo.language) }}
+                  />
                   {repo.language || "Plain Text"}
                 </div>
               )}
@@ -160,7 +164,10 @@ const EditorRepoCard = ({
               {/* Stats */}
               <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1">
-                  <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ backgroundColor: getLanguageColor(repo.language) }}
+                  />
                   {repo.language || "Text"}
                 </span>
                 <span className="flex items-center gap-1">
@@ -530,7 +537,7 @@ export function EditorWorkbench({ user, projects = [] }: any) {
             </div>
 
             {/* 2. LIBRARY SECTION */}
-            <div className="space-y-6">
+            <div className="space-y-6 pb-10">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-t border-border pt-8">
                 <div className="flex items-center gap-3">
                   <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest">

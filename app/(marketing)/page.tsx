@@ -1,7 +1,7 @@
 "use client";
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 import {
   Github,
   ArrowRight,
@@ -29,6 +29,8 @@ import {
   Target,
   Shield,
   Layers,
+  LayoutDashboard,
+  PenTool,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useRef } from "react";
@@ -175,6 +177,20 @@ const ARCHETYPES = [
     color: "text-sky-500",
     bg: "bg-sky-500/10",
     border: "group-hover:border-sky-500/50",
+  },
+  {
+    icon: GitPullRequest,
+    label: "The Contributor",
+    color: "text-lime-500",
+    bg: "bg-lime-500/10",
+    border: "group-hover:border-lime-500/50",
+  },
+  {
+    icon: Blocks,
+    label: "Active Builder",
+    color: "text-sky-400",
+    bg: "bg-sky-400/10",
+    border: "group-hover:border-sky-400/50",
   },
 ];
 
@@ -366,7 +382,7 @@ const LandingReportCard = () => {
 };
 
 // --- HERO SECTION ---
-const Hero = ({ onLogin }: { onLogin: () => void }) => (
+const Hero = ({ onLogin, session }: { onLogin: () => void; session: any }) => (
   <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 px-6 overflow-hidden">
     {/* Ambient Glows */}
     <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
@@ -414,20 +430,41 @@ const Hero = ({ onLogin }: { onLogin: () => void }) => (
           transition={{ delay: 0.3 }}
           className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 pt-4"
         >
-          <button
-            onClick={onLogin}
-            className="group relative h-12 px-8 rounded-full bg-foreground text-background font-medium text-lg hover:scale-105 hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center gap-2 hover:cursor-pointer"
-          >
-            <Github size={20} />
-            <span>Connect GitHub</span>
-          </button>
-          <Link
-            href="/methodology"
-            className="h-12 px-8 rounded-full bg-secondary hover:bg-secondary/80 text-foreground font-medium text-lg transition-all flex items-center gap-2 border border-border"
-          >
-            <BarChart3 size={20} />
-            View Methodology
-          </Link>
+          {session ? (
+            <>
+              <Link
+                href="/dashboard"
+                className="group relative h-12 px-8 rounded-full bg-foreground text-background font-medium text-lg hover:scale-105 hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center gap-2"
+              >
+                <LayoutDashboard size={20} />
+                <span>Dashboard</span>
+              </Link>
+              <Link
+                href="/editor"
+                className="h-12 px-8 rounded-full bg-secondary hover:bg-secondary/80 text-foreground font-medium text-lg transition-all flex items-center gap-2 border border-border"
+              >
+                <PenTool size={20} />
+                <span>Editor</span>
+              </Link>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onLogin}
+                className="group relative h-12 px-8 rounded-full bg-foreground text-background font-medium text-lg hover:scale-105 hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center gap-2 hover:cursor-pointer"
+              >
+                <Github size={20} />
+                <span>Connect GitHub</span>
+              </button>
+              <Link
+                href="/methodology"
+                className="h-12 px-8 rounded-full bg-secondary hover:bg-secondary/80 text-foreground font-medium text-lg transition-all flex items-center gap-2 border border-border"
+              >
+                <BarChart3 size={20} />
+                View Methodology
+              </Link>
+            </>
+          )}
         </motion.div>
 
         <div className="pt-8 flex items-center justify-center lg:justify-start gap-6 text-xs text-muted-foreground font-mono">
@@ -516,7 +553,7 @@ const FeaturesBento = () => {
                 <Users size={24} />
               </div>
               <h3 className="text-2xl font-bold mb-4">
-                18 Developer Archetypes
+                20 Developer Archetypes
               </h3>
               <p className="text-muted-foreground mb-4">
                 Are you "The Machine"? "The Architect"? Or "The Open Source
@@ -618,37 +655,59 @@ const Steps = () => {
 };
 
 // --- FINAL CTA ---
-const FinalCTA = ({ onLogin }: { onLogin: () => void }) => (
+const FinalCTA = ({
+  onLogin,
+  session,
+}: {
+  onLogin: () => void;
+  session: any;
+}) => (
   <section className="py-32 px-6 relative overflow-hidden">
     <div className="absolute inset-0 bg-primary/5 skew-y-3 transform origin-bottom-left -z-10" />
 
     <div className="max-w-3xl mx-auto text-center space-y-8">
       <h2 className="font-serif text-5xl md:text-6xl font-bold tracking-tight">
-        Ready to verify your skills?
+        {session ? "Keep building your legacy." : "Ready to verify your skills?"}
       </h2>
       <p className="text-xl text-muted-foreground">
-        Join thousands of developers who are letting their code do the talking.
+        {session
+          ? "Update your profile preferences and generate your latest report card."
+          : "Join thousands of developers who are letting their code do the talking."}
       </p>
 
       <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-        <button
-          onClick={onLogin}
-          className="h-14 px-10 rounded-full bg-foreground text-background font-bold text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3 hover:cursor-pointer"
-        >
-          <Github size={22} />
-          Claim Your Profile
-        </button>
+        {session ? (
+          <Link
+            href="/editor"
+            className="h-14 px-10 rounded-full bg-foreground text-background font-bold text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3"
+          >
+            <PenTool size={22} />
+            Go to Editor
+          </Link>
+        ) : (
+          <button
+            onClick={onLogin}
+            className="h-14 px-10 rounded-full bg-foreground text-background font-bold text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3 hover:cursor-pointer"
+          >
+            <Github size={22} />
+            Claim Your Profile
+          </button>
+        )}
       </div>
 
-      <p className="text-xs text-muted-foreground font-mono opacity-70">
-        Takes &lt; 30 seconds · No credit card required
-      </p>
+      {!session && (
+        <p className="text-xs text-muted-foreground font-mono opacity-70">
+          Takes &lt; 30 seconds · No credit card required
+        </p>
+      )}
     </div>
   </section>
 );
 
 // --- MAIN PAGE COMPONENT ---
 export default function LandingPage() {
+  const { data: session } = useSession();
+
   const handleLogin = () => {
     signIn("github", { callbackUrl: "/dashboard" });
   };
@@ -674,21 +733,37 @@ export default function LandingPage() {
             >
               Methodology
             </Link>
-            <button
-              onClick={handleLogin}
-              className="text-sm font-medium px-5 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border rounded-full transition-all hover:cursor-pointer"
-            >
-              Sign In
-            </button>
+            {session?.user ? (
+              <Link
+                href="/dashboard"
+                className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded-full transition-all"
+              >
+                <img
+                  src={(session.user as any).image || ""}
+                  alt={(session.user as any).name || "User"}
+                  className="w-6 h-6 rounded-full"
+                />
+                <span className="text-sm font-medium text-foreground hidden sm:inline">
+                  @{(session.user as any).username || session.user.name}
+                </span>
+              </Link>
+            ) : (
+              <button
+                onClick={handleLogin}
+                className="text-sm font-medium px-5 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border rounded-full transition-all hover:cursor-pointer"
+              >
+                Sign In
+              </button>
+            )}
           </div>
         </div>
       </nav>
 
       {/* Sections */}
-      <Hero onLogin={handleLogin} />
+      <Hero onLogin={handleLogin} session={session} />
       <FeaturesBento />
       <Steps />
-      <FinalCTA onLogin={handleLogin} />
+      <FinalCTA onLogin={handleLogin} session = {session}/>
 
       {/* Footer */}
       <footer className="border-t border-border py-12 px-6 bg-background">

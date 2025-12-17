@@ -69,6 +69,7 @@ export default async function EditorPage() {
             insights={insights}
             showGrowthFocus={false}
             className="shadow-sm"
+            totalRepoCount={userWithAllProjects.projects.length}
           />
 
           {/* Growth Focus Section (Private - Editor Only) */}

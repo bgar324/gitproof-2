@@ -206,17 +206,17 @@ export default async function MethodologyPage() {
             <div className="grid md:grid-cols-2 gap-4 my-6">
               <div className="p-4 bg-emerald-500/5 border border-emerald-500/20 rounded-lg">
                 <div className="text-sm font-mono text-emerald-500 mb-1">
-                  ≥95%
+                  ≥85%
                 </div>
-                <div className="text-sm font-medium">Elite Consistency</div>
+                <div className="text-sm font-medium">Elite Consistency (Streak Master)</div>
               </div>
               <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg">
-                <div className="text-sm font-mono text-blue-500 mb-1">≥85%</div>
-                <div className="text-sm font-medium">Very High</div>
+                <div className="text-sm font-mono text-blue-500 mb-1">≥70%</div>
+                <div className="text-sm font-medium">Very High (The Machine)</div>
               </div>
               <div className="p-4 bg-cyan-500/5 border border-cyan-500/20 rounded-lg">
-                <div className="text-sm font-mono text-cyan-500 mb-1">≥70%</div>
-                <div className="text-sm font-medium">High</div>
+                <div className="text-sm font-mono text-cyan-500 mb-1">≥50%</div>
+                <div className="text-sm font-medium">High (The Maintainer)</div>
               </div>
               <div className="p-4 bg-amber-500/5 border border-amber-500/20 rounded-lg">
                 <div className="text-sm font-mono text-amber-500 mb-1">
@@ -247,8 +247,11 @@ export default async function MethodologyPage() {
             </p>
 
             <h3 className="text-xl font-semibold mt-8 mb-4">
-              3.1 Archetype Criteria
+              3.1 Archetype Criteria (Priority Order)
             </h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              The system evaluates conditions from top to bottom, assigning the first matching archetype. More exclusive archetypes are checked first.
+            </p>
             <div className="space-y-3">
               {[
                 {
@@ -270,12 +273,12 @@ export default async function MethodologyPage() {
                 {
                   title: "The Streak Master",
                   color: "yellow",
-                  criteria: "Streak ≥100 days OR Consistency ≥95%",
+                  criteria: "Streak ≥100 days OR Consistency ≥85%",
                 },
                 {
                   title: "The Machine",
                   color: "blue",
-                  criteria: "Consistency ≥85%",
+                  criteria: "Consistency ≥70%",
                 },
                 {
                   title: "The Shipper",
@@ -293,6 +296,16 @@ export default async function MethodologyPage() {
                   criteria: "Documentation Rate ≥80% AND ≥5 projects",
                 },
                 {
+                  title: "The Craftsperson",
+                  color: "cyan",
+                  criteria: "Documentation Rate ≥60% AND Impact ≥15",
+                },
+                {
+                  title: "The Collaborator",
+                  color: "green",
+                  criteria: "Pull Requests ≥75",
+                },
+                {
                   title: "The Specialist",
                   color: "emerald",
                   criteria: "≥75% projects in one language AND ≥5 projects",
@@ -305,7 +318,42 @@ export default async function MethodologyPage() {
                 {
                   title: "The Architect",
                   color: "slate",
-                  criteria: "≥25 repositories",
+                  criteria: "≥20 total repositories (includes hidden projects)",
+                },
+                {
+                  title: "The Builder",
+                  color: "teal",
+                  criteria: "≥12 total repositories (includes hidden projects)",
+                },
+                {
+                  title: "The Maintainer",
+                  color: "blue",
+                  criteria: "≥10 repositories AND Consistency ≥50%",
+                },
+                {
+                  title: "The Automator",
+                  color: "purple",
+                  criteria: "Has CI/CD/automation topics AND Impact ≥20",
+                },
+                {
+                  title: "The Contributor",
+                  color: "lime",
+                  criteria: "Pull Requests ≥30",
+                },
+                {
+                  title: "Active Builder",
+                  color: "sky",
+                  criteria: "Impact Score ≥15",
+                },
+                {
+                  title: "Rising Star",
+                  color: "amber",
+                  criteria: "Impact Score ≥20 (default for active developers)",
+                },
+                {
+                  title: "Full Stack Dev",
+                  color: "primary",
+                  criteria: "≥5 repositories AND Impact ≥10 (default for builders)",
                 },
               ].map((archetype, index) => (
                 <div
@@ -327,6 +375,19 @@ export default async function MethodologyPage() {
                   </div>
                 </div>
               ))}
+            </div>
+
+            <div className="mt-6 p-4 bg-muted/30 border border-border rounded-lg">
+              <h4 className="text-sm font-semibold text-foreground mb-2">
+                Default Fallback
+              </h4>
+              <p className="text-sm text-muted-foreground">
+                If no archetype criteria are met, the system assigns{" "}
+                <span className="font-mono text-foreground">"Developer"</span> as a
+                neutral fallback. This typically indicates a newer profile or one
+                with limited public activity. Build up your impact score to ≥15 (Active Builder),
+                or get 5+ repos with ≥10 impact (Full Stack Dev) to unlock more specific archetypes.
+              </p>
             </div>
           </div>
         </section>
