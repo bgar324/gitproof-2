@@ -31,9 +31,12 @@ import {
   Layers,
   LayoutDashboard,
   PenTool,
+  Sun,
+  Laptop,
 } from "lucide-react";
+import { useTheme } from "next-themes";
 import Link from "next/link";
-import React, { useRef } from "react";
+import React, { useRef, useState, useEffect } from "react";
 
 // --- MOCK DATA FOR DEMO CARD ---
 const DEMO_USER = {
@@ -239,6 +242,56 @@ const InteractiveArchetypeWheel = () => {
   );
 };
 
+const ThemeToggle = () => {
+  const { theme, setTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  // Avoid hydration mismatch by waiting for mount
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return <div className="w-24 h-8" />; // Placeholder to prevent layout shift
+
+  return (
+    <div className="flex items-center p-1 rounded-full border border-border bg-background shadow-sm">
+      <button
+        onClick={() => setTheme("light")}
+        className={`p-1.5 rounded-full transition-all ${
+          theme === "light"
+            ? "bg-secondary text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+        aria-label="Light Mode"
+      >
+        <Sun size={14} />
+      </button>
+      <button
+        onClick={() => setTheme("system")}
+        className={`p-1.5 rounded-full transition-all ${
+          theme === "system"
+            ? "bg-secondary text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+        aria-label="System Mode"
+      >
+        <Laptop size={14} />
+      </button>
+      <button
+        onClick={() => setTheme("dark")}
+        className={`p-1.5 rounded-full transition-all ${
+          theme === "dark"
+            ? "bg-secondary text-foreground shadow-sm"
+            : "text-muted-foreground hover:text-foreground"
+        }`}
+        aria-label="Dark Mode"
+      >
+        <Moon size={14} />
+      </button>
+    </div>
+  );
+};
+
 // --- COMPONENT: 3D DEMO REPORT CARD ---
 const LandingReportCard = () => {
   const x = useMotionValue(0);
@@ -409,7 +462,7 @@ const Hero = ({ onLogin, session }: { onLogin: () => void; session: any }) => (
           className="font-serif text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight text-foreground leading-[1]"
         >
           Your Code, <br />
-            Verified.
+          Verified.
         </motion.h1>
 
         <motion.p
@@ -667,7 +720,9 @@ const FinalCTA = ({
 
     <div className="max-w-3xl mx-auto text-center space-y-8">
       <h2 className="font-serif text-5xl md:text-6xl font-bold tracking-tight">
-        {session ? "Keep building your legacy." : "Ready to verify your skills?"}
+        {session
+          ? "Keep building your legacy."
+          : "Ready to verify your skills?"}
       </h2>
       <p className="text-xl text-muted-foreground">
         {session
@@ -763,7 +818,7 @@ export default function LandingPage() {
       <Hero onLogin={handleLogin} session={session} />
       <FeaturesBento />
       <Steps />
-      <FinalCTA onLogin={handleLogin} session = {session}/>
+      <FinalCTA onLogin={handleLogin} session={session} />
 
       {/* Footer */}
       <footer className="border-t border-border py-12 px-6 bg-background">
@@ -795,6 +850,9 @@ export default function LandingPage() {
             >
               Privacy
             </Link>
+            <div className="pl-0 md:pl-6 md:border-l border-border">
+              <ThemeToggle />
+            </div>
           </div>
         </div>
       </footer>
