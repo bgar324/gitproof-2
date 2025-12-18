@@ -24,18 +24,23 @@ import {
 export default function DashboardView({
   data,
   lastSyncedAt,
+  isStale,
 }: {
   data: GithubProfile;
-  lastSyncedAt: Date;
+  lastSyncedAt: Date | null;
+  isStale: boolean;
 }) {
   const router = useRouter();
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
   const [timeRange, setTimeRange] = useState<"all" | "90d" | "30d">("all");
   const [selectedRepo, setSelectedRepo] = useState<any>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [timeAgo, setTimeAgo] = useState(getTimeAgo(lastSyncedAt));
+  const [timeAgo, setTimeAgo] = useState(
+    lastSyncedAt ? getTimeAgo(lastSyncedAt) : "never"
+  );
 
   useEffect(() => {
+    if (!lastSyncedAt) return;
     const interval = setInterval(() => {
       setTimeAgo(getTimeAgo(lastSyncedAt));
     }, 60000);
@@ -86,6 +91,8 @@ export default function DashboardView({
           image={data.image}
           timeAgo={timeAgo}
           isRefreshing={isRefreshing}
+          isStale={isStale}
+          hasSynced={!!lastSyncedAt}
           onRefresh={handleRefresh}
         />
 

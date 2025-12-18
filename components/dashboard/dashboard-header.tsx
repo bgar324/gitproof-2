@@ -10,6 +10,8 @@ interface DashboardHeaderProps {
   image: string;
   timeAgo: string;
   isRefreshing: boolean;
+  isStale: boolean;
+  hasSynced: boolean;
   onRefresh: () => void;
 }
 
@@ -19,6 +21,8 @@ export function DashboardHeader({
   image,
   timeAgo,
   isRefreshing,
+  isStale,
+  hasSynced,
   onRefresh,
 }: DashboardHeaderProps) {
   const getStreakMessage = (s: number) => {
@@ -26,6 +30,7 @@ export function DashboardHeader({
     if (s < 5) return "You're building momentum. Keep the chain going.";
     return "You are unstoppable. Great consistency.";
   };
+  const buttonLabel = isRefreshing ? "Syncing..." : isStale ? "Sync now" : "Refresh";
 
   return (
     <div className="flex flex-col md:flex-row justify-between items-end gap-6 pb-6 border-b border-border">
@@ -66,8 +71,14 @@ export function DashboardHeader({
       >
         <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-secondary/50 text-muted-foreground border border-border/50">
           <Clock size={10} className="opacity-60" />
-          <span>Synced {timeAgo}</span>
+          <span>{hasSynced ? `Synced ${timeAgo}` : "Never synced"}</span>
         </div>
+
+        {isStale && (
+          <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-700 border border-amber-500/20">
+            <span>Data stale</span>
+          </div>
+        )}
 
         <button
           onClick={onRefresh}
@@ -75,7 +86,7 @@ export function DashboardHeader({
           className="h-8 px-3 rounded-lg border border-border/50 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-secondary/50 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <RefreshCw size={12} className={cn(isRefreshing && "animate-spin")} />
-          {isRefreshing ? "Syncing..." : "Refresh"}
+          {buttonLabel}
         </button>
 
         <div className="w-10 h-10 rounded-full overflow-hidden border border-border">

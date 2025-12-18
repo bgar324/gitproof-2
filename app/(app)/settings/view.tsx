@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useTheme } from "next-themes";
 import { RefreshCw, Save } from "lucide-react";
 import { signOut } from "next-auth/react";
@@ -15,8 +16,6 @@ import {
 } from "@/components/settings";
 
 export default function SettingsView({ user, settings }: any) {
-  if (!user) return null;
-
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -32,7 +31,7 @@ export default function SettingsView({ user, settings }: any) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmUsername, setConfirmUsername] = useState("");
   const [confirmPhrase, setConfirmPhrase] = useState("");
-  const canDelete = confirmUsername === user.username && confirmPhrase === "Confirm";
+  const canDelete = confirmUsername === user?.username && confirmPhrase === "Confirm";
 
   useEffect(() => setMounted(true), []);
 
@@ -77,53 +76,88 @@ export default function SettingsView({ user, settings }: any) {
     }
   };
 
-  if (!mounted) return null;
+  if (!mounted || !user) return null;
+
+  const containerMotion = {
+    hidden: { opacity: 0, y: 12 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.4, ease: "easeOut", staggerChildren: 0.08 },
+    },
+  };
+  const itemMotion = {
+    hidden: { opacity: 0, y: 10 },
+    visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+  };
 
   return (
     <main className="pt-8 pb-20 px-6 max-w-5xl mx-auto">
-      <div className="flex items-center justify-between mb-10">
-        <div>
-          <h1 className="text-3xl font-serif text-foreground">Settings</h1>
-          <p className="text-muted-foreground mt-1 text-sm">
-            Manage your profile and preferences.
-          </p>
-        </div>
-        <button
-          onClick={handleSave}
-          disabled={isSaving}
-          className="h-10 px-6 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity text-sm font-medium flex items-center gap-2 shadow-lg"
+      <motion.div
+        initial="hidden"
+        animate="visible"
+        variants={containerMotion}
+      >
+        <motion.div
+          className="flex items-center justify-between mb-10"
+          variants={itemMotion}
         >
-          {isSaving ? (
-            <RefreshCw size={16} className="animate-spin" />
-          ) : (
-            <Save size={16} />
-          )}
-          {isSaving ? "Saving..." : "Save Changes"}
-        </button>
-      </div>
+          <div>
+            <h1 className="text-3xl font-serif text-foreground">Settings</h1>
+            <p className="text-muted-foreground mt-1 text-sm">
+              Manage your profile and preferences.
+            </p>
+          </div>
+          <button
+            onClick={handleSave}
+            disabled={isSaving}
+            className="h-10 px-6 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity text-sm font-medium flex items-center gap-2 shadow-lg"
+          >
+            {isSaving ? (
+              <RefreshCw size={16} className="animate-spin" />
+            ) : (
+              <Save size={16} />
+            )}
+            {isSaving ? "Saving..." : "Save Changes"}
+          </button>
+        </motion.div>
 
-      <div className="space-y-2">
-        <AppearanceSection theme={theme} onThemeChange={setTheme} />
-        <VisibilitySection
-          isPublic={isPublic}
-          username={user.username}
-          onPublicChange={setIsPublic}
-        />
-        <AccountSection user={user} isSyncing={isSyncing} onResync={handleResync} />
-        <NotificationsSection emailNotifs={emailNotifs} onEmailNotifsChange={setEmailNotifs} />
-        <DangerZoneSection
-          showDeleteConfirm={showDeleteConfirm}
-          isDeleting={isDeleting}
-          confirmUsername={confirmUsername}
-          confirmPhrase={confirmPhrase}
-          canDelete={canDelete}
-          username={user.username}
-          onShowDeleteConfirm={setShowDeleteConfirm}
-          onConfirmUsernameChange={setConfirmUsername}
-          onConfirmPhraseChange={setConfirmPhrase}
-          onDeleteAccount={handleDeleteAccount}
-        />
-      </div>
+        <div className="space-y-2">
+          <motion.div variants={itemMotion}>
+            <AppearanceSection theme={theme} onThemeChange={setTheme} />
+          </motion.div>
+          <motion.div variants={itemMotion}>
+            <VisibilitySection
+              isPublic={isPublic}
+              username={user.username}
+              onPublicChange={setIsPublic}
+            />
+          </motion.div>
+          <motion.div variants={itemMotion}>
+            <AccountSection user={user} isSyncing={isSyncing} onResync={handleResync} />
+          </motion.div>
+          <motion.div variants={itemMotion}>
+            <NotificationsSection
+              emailNotifs={emailNotifs}
+              onEmailNotifsChange={setEmailNotifs}
+            />
+          </motion.div>
+          <motion.div variants={itemMotion}>
+            <DangerZoneSection
+              showDeleteConfirm={showDeleteConfirm}
+              isDeleting={isDeleting}
+              confirmUsername={confirmUsername}
+              confirmPhrase={confirmPhrase}
+              canDelete={canDelete}
+              username={user.username}
+              onShowDeleteConfirm={setShowDeleteConfirm}
+              onConfirmUsernameChange={setConfirmUsername}
+              onConfirmPhraseChange={setConfirmPhrase}
+              onDeleteAccount={handleDeleteAccount}
+            />
+          </motion.div>
+        </div>
+      </motion.div>
     </main>
   );
 }

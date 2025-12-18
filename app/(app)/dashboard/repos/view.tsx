@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   Search, ArrowLeft, GitFork, Star, Code2, ArrowUpRight, ArrowUpDown 
 } from "lucide-react";
 import Link from "next/link";
 import RepoModal from "@/components/repo-modal";
-import { cn } from "@/lib/utils";
+import { cn, getTimeAgo } from "@/lib/utils";
+import { triggerSync } from "@/app/actions";
+import { useRouter } from "next/navigation";
 
 // --- REUSED CARD COMPONENT (Identical to Dashboard) ---
 const RepoCard = ({ repo, onClick }: { repo: any, onClick: () => void }) => (
@@ -59,10 +61,44 @@ const RepoCard = ({ repo, onClick }: { repo: any, onClick: () => void }) => (
   </motion.div>
 );
 
-export default function ReposView({ repos }: { repos: any[] }) {
+export default function ReposView({
+  repos,
+  lastSyncedAt,
+  isStale,
+}: {
+  repos: any[];
+  lastSyncedAt: Date | null;
+  isStale: boolean;
+}) {
+  const router = useRouter();
   const [search, setSearch] = useState("");
   const [selectedRepo, setSelectedRepo] = useState<any>(null);
   const [sortMode, setSortMode] = useState<"impact" | "stars" | "recent">("impact");
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [timeAgo, setTimeAgo] = useState(
+    lastSyncedAt ? getTimeAgo(lastSyncedAt) : "never"
+  );
+
+  useEffect(() => {
+    if (!lastSyncedAt) return;
+    const interval = setInterval(() => {
+      setTimeAgo(getTimeAgo(lastSyncedAt));
+    }, 60000);
+    return () => clearInterval(interval);
+  }, [lastSyncedAt]);
+
+  const handleSync = async () => {
+    setIsRefreshing(true);
+    try {
+      await triggerSync();
+      router.refresh();
+      setTimeAgo("just now");
+    } catch (error) {
+      console.error("Sync failed:", error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   // --- SORTING & FILTERING LOGIC ---
   const filteredRepos = useMemo(() => {
@@ -137,6 +173,24 @@ export default function ReposView({ repos }: { repos: any[] }) {
             </div>
           </div>
         </div>
+
+        {isStale && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3">
+            <p className="text-xs text-amber-700">
+              {lastSyncedAt
+                ? `Data is stale. Last synced ${timeAgo}.`
+                : "Data hasn't been synced yet."}{" "}
+              Sync to refresh repository details.
+            </p>
+            <button
+              onClick={handleSync}
+              disabled={isRefreshing}
+              className="h-8 px-3 rounded-lg border border-amber-500/30 text-xs font-medium text-amber-700 hover:bg-amber-500/10 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isRefreshing ? "Syncing..." : "Sync now"}
+            </button>
+          </div>
+        )}
 
         {/* Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

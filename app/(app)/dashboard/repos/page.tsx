@@ -2,7 +2,6 @@ import ReposView from "./view";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
-import { syncUserData } from "@/lib/sync";
 import { getLanguageColor } from "@/lib/language-colors";
 
 export default async function AllReposPage() {
@@ -12,8 +11,8 @@ export default async function AllReposPage() {
     redirect("/");
   }
 
-  // 2. Fetch user and check staleness
-  let user = await db.user.findUnique({
+  // 2. Fetch user and projects
+  const user = await db.user.findUnique({
     where: { email: session.user.email },
     include: {
       projects: {
@@ -29,32 +28,9 @@ export default async function AllReposPage() {
 
   // 3. Check if cache is stale (> 1 hour old) - same as dashboard
   const ONE_HOUR = 60 * 60 * 1000;
-  const isStale = !user?.lastSyncedAt ||
-    (Date.now() - user.lastSyncedAt.getTime()) > ONE_HOUR;
-
-  // 4. If stale, sync repos to database
-  if (isStale) {
-    console.log("🔄 Repos are stale, triggering sync...");
-    await syncUserData(
-      session.user.username,
-      session.user.email,
-      session.user.image || ""
-    );
-
-    // Refetch user with updated projects
-    user = await db.user.findUnique({
-      where: { email: session.user.email },
-      include: {
-        projects: {
-          orderBy: { impactScore: 'desc' },
-        },
-      },
-    });
-
-    if (!user) {
-      redirect("/");
-    }
-  }
+  const lastSyncedAt = user.lastSyncedAt || null;
+  const isStale = !lastSyncedAt ||
+    (Date.now() - lastSyncedAt.getTime()) > ONE_HOUR;
 
   // 3. Map to expected format
   const repos = user.projects.map((p) => ({
@@ -75,5 +51,11 @@ export default async function AllReposPage() {
     updated: p.lastPush.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
   }));
 
-  return <ReposView repos={repos} />;
+  return (
+    <ReposView
+      repos={repos}
+      lastSyncedAt={lastSyncedAt}
+      isStale={isStale}
+    />
+  );
 }
