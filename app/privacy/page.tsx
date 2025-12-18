@@ -1,16 +1,16 @@
 import Link from "next/link";
 import { Shield, CheckCircle2, Lock, Eye, Database, UserX } from "lucide-react";
 import { auth } from "@/auth";
-import { MethodologyNavbar } from "@/components/methodology-navbar";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 
 export default async function PrivacyPage() {
   const session = await auth();
-  const isAuthenticated = !!session?.user;
 
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
-      <MethodologyNavbar isAuthenticated={isAuthenticated} />
+      <Navbar session={session} variant="app" />
 
       {/* Add top padding to account for fixed navbar */}
       <div className="pt-16"></div>
@@ -435,16 +435,8 @@ export default async function PrivacyPage() {
           </Link>
         </section>
 
-        {/* Footer */}
-        <footer className="pt-8 border-t border-border text-center">
-          <p className="text-sm text-muted-foreground">
-            By using GitProof, you agree to this privacy policy.{" "}
-            <Link href="/methodology" className="text-primary hover:underline">
-              Learn how we calculate metrics
-            </Link>
-          </p>
-        </footer>
       </main>
+      <Footer />
     </div>
   );
 }

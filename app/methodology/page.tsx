@@ -7,16 +7,16 @@ import {
   Trophy,
 } from "lucide-react";
 import { auth } from "@/auth";
-import { MethodologyNavbar } from "@/components/methodology-navbar";
+import { Navbar } from "@/components/layout/navbar";
+import { Footer } from "@/components/layout/footer";
 
 export default async function MethodologyPage() {
   const session = await auth();
-  const isAuthenticated = !!session?.user;
 
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
-      <MethodologyNavbar isAuthenticated={isAuthenticated} />
+      <Navbar session={session} variant="app" />
 
       {/* Add top padding to account for fixed navbar */}
       <div className="pt-16"></div>
@@ -646,20 +646,8 @@ export default async function MethodologyPage() {
           </p>
         </section>
 
-        {/* Footer */}
-        <footer className="pt-8 border-t border-border text-center">
-          <p className="text-sm text-muted-foreground">
-            Questions about our methodology?{" "}
-            <Link
-              href="https://www.bentgarcia.com"
-              target="_blank"
-              className="text-primary hover:underline"
-            >
-              Get in touch
-            </Link>
-          </p>
-        </footer>
       </main>
+      <Footer />
     </div>
   );
 }

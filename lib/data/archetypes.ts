@@ -1,0 +1,172 @@
+import {
+  Layers,
+  Cpu,
+  Rocket,
+  Code2,
+  Flame,
+  Users,
+  Sparkles,
+  Gem,
+  Globe,
+  GitPullRequest,
+  Workflow,
+  Blocks,
+  Trophy,
+  Moon,
+  Zap,
+  Heart,
+  Target,
+  Shield,
+  type LucideIcon,
+} from "lucide-react";
+
+export interface Archetype {
+  icon: LucideIcon;
+  label: string;
+  color: string;
+  bg: string;
+  border: string;
+}
+
+export const ARCHETYPES: Archetype[] = [
+  {
+    icon: Layers,
+    label: "The Architect",
+    color: "text-indigo-500",
+    bg: "bg-indigo-500/10",
+    border: "group-hover:border-indigo-500/50",
+  },
+  {
+    icon: Cpu,
+    label: "The Machine",
+    color: "text-slate-500",
+    bg: "bg-slate-500/10",
+    border: "group-hover:border-slate-500/50",
+  },
+  {
+    icon: Rocket,
+    label: "10x Engineer",
+    color: "text-orange-500",
+    bg: "bg-orange-500/10",
+    border: "group-hover:border-orange-500/50",
+  },
+  {
+    icon: Code2,
+    label: "Full Stack Dev",
+    color: "text-blue-500",
+    bg: "bg-blue-500/10",
+    border: "group-hover:border-blue-500/50",
+  },
+  {
+    icon: Flame,
+    label: "The Shipper",
+    color: "text-red-500",
+    bg: "bg-red-500/10",
+    border: "group-hover:border-red-500/50",
+  },
+  {
+    icon: Users,
+    label: "The Influencer",
+    color: "text-pink-500",
+    bg: "bg-pink-500/10",
+    border: "group-hover:border-pink-500/50",
+  },
+  {
+    icon: Sparkles,
+    label: "The Craftsperson",
+    color: "text-amber-500",
+    bg: "bg-amber-500/10",
+    border: "group-hover:border-amber-500/50",
+  },
+  {
+    icon: Gem,
+    label: "The Specialist",
+    color: "text-emerald-500",
+    bg: "bg-emerald-500/10",
+    border: "group-hover:border-emerald-500/50",
+  },
+  {
+    icon: Globe,
+    label: "The Polyglot",
+    color: "text-cyan-500",
+    bg: "bg-cyan-500/10",
+    border: "group-hover:border-cyan-500/50",
+  },
+  {
+    icon: GitPullRequest,
+    label: "The Collaborator",
+    color: "text-violet-500",
+    bg: "bg-violet-500/10",
+    border: "group-hover:border-violet-500/50",
+  },
+  {
+    icon: Workflow,
+    label: "The Automator",
+    color: "text-teal-500",
+    bg: "bg-teal-500/10",
+    border: "group-hover:border-teal-500/50",
+  },
+  {
+    icon: Blocks,
+    label: "The Builder",
+    color: "text-yellow-600",
+    bg: "bg-yellow-600/10",
+    border: "group-hover:border-yellow-600/50",
+  },
+  {
+    icon: Trophy,
+    label: "The Champion",
+    color: "text-yellow-400",
+    bg: "bg-yellow-400/10",
+    border: "group-hover:border-yellow-400/50",
+  },
+  {
+    icon: Moon,
+    label: "The Night Owl",
+    color: "text-purple-400",
+    bg: "bg-purple-400/10",
+    border: "group-hover:border-purple-400/50",
+  },
+  {
+    icon: Zap,
+    label: "Streak Master",
+    color: "text-yellow-500",
+    bg: "bg-yellow-500/10",
+    border: "group-hover:border-yellow-500/50",
+  },
+  {
+    icon: Heart,
+    label: "Open Source Hero",
+    color: "text-rose-500",
+    bg: "bg-rose-500/10",
+    border: "group-hover:border-rose-500/50",
+  },
+  {
+    icon: Target,
+    label: "The Perfectionist",
+    color: "text-red-600",
+    bg: "bg-red-600/10",
+    border: "group-hover:border-red-600/50",
+  },
+  {
+    icon: Shield,
+    label: "The Maintainer",
+    color: "text-sky-500",
+    bg: "bg-sky-500/10",
+    border: "group-hover:border-sky-500/50",
+  },
+  {
+    icon: GitPullRequest,
+    label: "The Contributor",
+    color: "text-lime-500",
+    bg: "bg-lime-500/10",
+    border: "group-hover:border-lime-500/50",
+  },
+  {
+    icon: Blocks,
+    label: "Active Builder",
+    color: "text-sky-400",
+    bg: "bg-sky-400/10",
+    border: "group-hover:border-sky-400/50",
+  },
+];

@@ -1,0 +1,87 @@
+"use client";
+
+import { motion } from "framer-motion";
+import { Terminal, Zap, ArrowUpRight, Clock, RefreshCw } from "lucide-react";
+import { cn } from "@/lib/utils";
+
+interface DashboardHeaderProps {
+  username: string;
+  streak: number;
+  image: string;
+  timeAgo: string;
+  isRefreshing: boolean;
+  onRefresh: () => void;
+}
+
+export function DashboardHeader({
+  username,
+  streak,
+  image,
+  timeAgo,
+  isRefreshing,
+  onRefresh,
+}: DashboardHeaderProps) {
+  const getStreakMessage = (s: number) => {
+    if (s === 0) return "The blank canvas is yours. Start a new streak today.";
+    if (s < 5) return "You're building momentum. Keep the chain going.";
+    return "You are unstoppable. Great consistency.";
+  };
+
+  return (
+    <div className="flex flex-col md:flex-row justify-between items-end gap-6 pb-6 border-b border-border">
+      <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
+        <div className="flex items-center gap-2 text-muted-foreground mb-2 text-sm">
+          <span className="flex items-center gap-2 px-2 py-1 bg-secondary rounded-full text-xs font-mono">
+            <Terminal size={10} /> GP-2
+          </span>
+        </div>
+        <h1 className="text-4xl md:text-5xl font-serif text-foreground leading-tight">
+          Welcome back, {username}.
+        </h1>
+
+        <div className="flex items-center gap-3 mt-3">
+          <div
+            className={cn(
+              "px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1.5",
+              streak > 0
+                ? "bg-emerald-500/10 text-emerald-600 border border-emerald-500/20"
+                : "bg-secondary text-muted-foreground"
+            )}
+          >
+            <Zap size={12} className={streak > 0 ? "fill-current" : ""} />
+            {streak} Day Streak
+            {streak > 0 && <ArrowUpRight size={12} />}
+          </div>
+          <p className="text-muted-foreground text-sm font-light">
+            {getStreakMessage(streak)}
+          </p>
+        </div>
+      </motion.div>
+
+      <motion.div
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ delay: 0.1 }}
+        className="flex items-center gap-3"
+      >
+        <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium bg-secondary/50 text-muted-foreground border border-border/50">
+          <Clock size={10} className="opacity-60" />
+          <span>Synced {timeAgo}</span>
+        </div>
+
+        <button
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          className="h-8 px-3 rounded-lg border border-border/50 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-secondary/50 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <RefreshCw size={12} className={cn(isRefreshing && "animate-spin")} />
+          {isRefreshing ? "Syncing..." : "Refresh"}
+        </button>
+
+        <div className="w-10 h-10 rounded-full overflow-hidden border border-border">
+          <img src={image} alt="Avatar" className="w-full h-full object-cover" />
+        </div>
+      </motion.div>
+    </div>
+  );
+}

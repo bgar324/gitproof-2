@@ -3,7 +3,6 @@ import { Instrument_Serif } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
-import { Navbar } from "@/components/Navbar";
 import { Providers } from "@/components/providers";
 
 // Load Instrument Serif from Google
