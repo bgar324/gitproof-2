@@ -11,7 +11,7 @@ export function SaveButton({ isSaving, onSave }: SaveButtonProps) {
       <button
         onClick={onSave}
         disabled={isSaving}
-        className="shadow-2xl shadow-primary/20 bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium text-sm flex items-center gap-2 hover:scale-105 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-wait"
+        className="shadow-2xl shadow-primary/20 bg-primary text-primary-foreground px-6 py-3 rounded-full font-medium text-sm flex items-center gap-2 hover:scale-105 active:scale-95 transition-all disabled:opacity-70 disabled:cursor-wait hover:cursor-pointer"
       >
         {isSaving ? (
           <Loader2 size={16} className="animate-spin" />

@@ -26,9 +26,9 @@ export function PortfolioSection({ projects }: PortfolioSectionProps) {
             <span className="text-border">•</span>
             <button
               onClick={() => setShowScoreModal(true)}
-              className="text-muted-foreground hover:text-primary/80 underline decoration-dotted underline-offset-2 transition-colors hover:cursor-pointer"
+              className="text-muted-foreground transition-colors hover:underline decoration-dotted underline-offset-2 flex items-center gap-1 hover:cursor-pointer"
             >
-              How impact scores are calculated
+              How is this calculated?
             </button>
           </div>
         </div>

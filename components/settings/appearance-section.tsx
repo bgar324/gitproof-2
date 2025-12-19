@@ -16,7 +16,7 @@ export function AppearanceSection({ theme, onThemeChange }: AppearanceSectionPro
             key={mode}
             onClick={() => onThemeChange(mode)}
             className={cn(
-              "flex flex-col items-center justify-center gap-2 p-3 rounded-lg border text-xs font-medium transition-all",
+              "flex flex-col items-center justify-center gap-2 p-3 rounded-lg border text-xs font-medium transition-all hover:cursor-pointer",
               theme === mode
                 ? "bg-primary/5 border-primary text-primary ring-1 ring-primary/20"
                 : "bg-secondary/30 border-transparent hover:bg-secondary text-muted-foreground hover:text-foreground"

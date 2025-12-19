@@ -37,11 +37,11 @@ const RepoCard = ({ repo, onClick }: { repo: GithubRepo; onClick: () => void }) 
           </div>
         </div>
       </div>
-      {repo.isPublic ? (
+      {/* {repo.isPublic ? (
          <span className="px-2 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium">Public</span>
       ) : (
          <span className="px-2 py-0.5 rounded text-[10px] bg-secondary text-muted-foreground border border-border">Private</span>
-      )}
+      )} */}
     </div>
     
     <p className="text-xs text-muted-foreground line-clamp-2 mb-4 flex-1">

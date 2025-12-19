@@ -60,17 +60,8 @@ export function PublicRepoCard({ repo }: PublicRepoCardProps) {
                   getScoreColor(repo.impactScore)
                 )}
               >
-                <span className="font-bold">Impact {repo.impactScore}</span>
+                <span className="font-bold">Impact: {repo.impactScore}</span>
                 <span className="opacity-70">/50</span>
-              </div>
-
-              <div className="text-[10px] font-medium text-muted-foreground flex items-center gap-1 opacity-70">
-                {repo.isPublic !== false ? (
-                  <Globe size={10} />
-                ) : (
-                  <Lock size={10} />
-                )}
-                <span>{repo.isPublic !== false ? "Public" : "Private"}</span>
               </div>
             </div>
           </div>

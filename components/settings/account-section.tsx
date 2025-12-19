@@ -41,14 +41,14 @@ export function AccountSection({ user, isSyncing, onResync }: AccountSectionProp
         <button
           onClick={onResync}
           disabled={isSyncing}
-          className="flex items-center justify-center gap-2 h-9 rounded border border-border text-xs font-medium hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-wait"
+          className="flex items-center justify-center gap-2 h-9 rounded border border-border text-xs font-medium hover:bg-secondary transition-colors disabled:opacity-50 disabled:cursor-wait hover:cursor-pointer"
         >
           <RefreshCw size={14} className={isSyncing ? "animate-spin" : ""} />
           {isSyncing ? "Syncing..." : "Re-sync GitHub Data"}
         </button>
         <button
           onClick={() => signOut({ callbackUrl: "/" })}
-          className="flex items-center justify-center gap-2 h-9 rounded border border-border text-xs font-medium hover:bg-secondary transition-colors"
+          className="flex items-center justify-center gap-2 h-9 rounded border border-border text-xs font-medium hover:bg-secondary transition-colors hover:cursor-pointer"
         >
           <LogOut size={14} /> Sign Out All Devices
         </button>

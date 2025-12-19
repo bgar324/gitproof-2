@@ -42,7 +42,7 @@ export function FinalCTA({ session }: FinalCTAProps) {
           ) : (
             <button
               onClick={handleLogin}
-              className="h-14 px-10 rounded-full bg-foreground text-background font-bold text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3"
+              className="h-14 px-10 rounded-full bg-foreground text-background font-bold text-lg hover:scale-105 transition-all shadow-2xl flex items-center gap-3 hover:cursor-pointer"
             >
               <Github size={22} />
               Claim Your Profile

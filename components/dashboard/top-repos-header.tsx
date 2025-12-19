@@ -16,7 +16,7 @@ export function TopReposHeader({ repoCount, onInfoClick }: TopReposHeaderProps) 
           <span className="text-border">•</span>
           <button
             onClick={onInfoClick}
-            className="hover:text-primary transition-colors hover:underline decoration-dotted underline-offset-2 flex items-center gap-1"
+            className="hover:text-primary transition-colors hover:underline decoration-dotted underline-offset-2 flex items-center gap-1 hover:cursor-pointer"
           >
             How is this calculated?
           </button>

@@ -78,7 +78,7 @@ export function Navbar({ session, variant = "marketing" }: NavbarProps) {
           {/* Theme Toggle */}
           <button
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-            className="relative p-2 rounded-full hover:bg-accent transition-colors"
+            className="relative p-2 rounded-full hover:bg-accent transition-colors hover:cursor-pointer"
             aria-label="Toggle theme"
           >
             {isClient && theme === "dark" ? (
@@ -139,7 +139,7 @@ export function Navbar({ session, variant = "marketing" }: NavbarProps) {
           ) : (
             <button
               onClick={handleSignIn}
-              className="text-sm font-medium px-5 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border rounded-full transition-all"
+              className="text-sm font-medium px-5 py-2 bg-secondary hover:bg-secondary/80 text-foreground border border-border rounded-full transition-all hover:cursor-pointer"
             >
               Sign In
             </button>

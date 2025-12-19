@@ -13,7 +13,7 @@ export function TimeRangeSelector({ value, onChange }: TimeRangeSelectorProps) {
           key={range}
           onClick={() => onChange(range)}
           className={cn(
-            "px-3 py-1 text-xs font-medium rounded-md transition-all",
+            "px-3 py-1 text-xs font-medium rounded-md transition-all hover:cursor-pointer",
             value === range
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground hover:bg-background/50"

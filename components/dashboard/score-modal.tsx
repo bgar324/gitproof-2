@@ -3,7 +3,7 @@
 import { useEffect, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
-import { Shield, Star, Zap, Code2, X } from "lucide-react";
+import { Star, Zap, Code2, X, SlidersHorizontal } from "lucide-react";
 
 interface ScoreModalProps {
   isOpen: boolean;
@@ -17,7 +17,6 @@ export function ScoreModal({ isOpen, onClose }: ScoreModalProps) {
     () => false
   );
 
-  // Scroll Lock
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
@@ -61,16 +60,16 @@ export function ScoreModal({ isOpen, onClose }: ScoreModalProps) {
               <div className="p-6 border-b border-border/50 bg-muted/20 backdrop-blur flex justify-between items-center">
                 <div>
                   <h2 className="font-semibold text-lg flex items-center gap-2">
-                    <Shield className="text-emerald-500" size={18} />
-                    Impact Algorithm
+                    <SlidersHorizontal className="text-emerald-500" size={18} />
+                    Impact Scoring Model
                   </h2>
                   <p className="text-xs text-muted-foreground mt-0.5">
-                    How we calculate the 0-50 score.
+                    A transparent breakdown of how the 0–50 score is computed.
                   </p>
                 </div>
                 <button
                   onClick={onClose}
-                  className="p-2 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                  className="p-2 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground hover:cursor-pointer"
                 >
                   <X size={18} />
                 </button>
@@ -86,16 +85,18 @@ export function ScoreModal({ isOpen, onClose }: ScoreModalProps) {
                     </div>
                     <div>
                       <h3 className="font-medium text-sm text-foreground flex items-center gap-2">
-                        1. Popularity (Logarithmic)
+                        Popularity Signal
                         <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground font-mono">
                           ~40%
                         </span>
                       </h3>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        We use a log scale so viral repos don&apos;t break the chart.
+                        Measures external adoption using GitHub engagement. A
+                        logarithmic scale is applied so outliers do not
+                        dominate.
                         <br />
                         <span className="opacity-70">
-                          Formula: Forks (2x) + Stars (1x).
+                          Inputs: Forks (2× weight) and Stars (1× weight).
                         </span>
                       </p>
                     </div>
@@ -108,20 +109,22 @@ export function ScoreModal({ isOpen, onClose }: ScoreModalProps) {
                     </div>
                     <div>
                       <h3 className="font-medium text-sm text-foreground flex items-center gap-2">
-                        2. Recency Decay
+                        Recency & Maintenance
                         <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground font-mono">
                           ~30%
                         </span>
                       </h3>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        Code rots. We penalize inactivity.
+                        Rewards active development and penalizes long periods of
+                        inactivity. This helps surface projects that are
+                        actively maintained.
                       </p>
                       <div className="flex gap-2 mt-2">
                         <span className="text-[9px] border border-emerald-500/30 bg-emerald-500/10 text-emerald-600 px-1.5 py-0.5 rounded">
-                          &lt;7d: +15pts
+                          Updated &lt; 7 days
                         </span>
                         <span className="text-[9px] border border-yellow-500/30 bg-yellow-500/10 text-yellow-600 px-1.5 py-0.5 rounded">
-                          &lt;30d: +10pts
+                          Updated &lt; 30 days
                         </span>
                       </div>
                     </div>
@@ -134,24 +137,27 @@ export function ScoreModal({ isOpen, onClose }: ScoreModalProps) {
                     </div>
                     <div>
                       <h3 className="font-medium text-sm text-foreground flex items-center gap-2">
-                        3. Project Maturity
+                        Project Depth & Maturity
                         <span className="text-[10px] bg-secondary px-1.5 py-0.5 rounded text-muted-foreground font-mono">
                           ~30%
                         </span>
                       </h3>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        We parse your <code>README.md</code> size and language
-                        complexity to distinguish &quot;Hello World&quot; apps from real
-                        engineering.
+                        Evaluates project substance by analyzing documentation
+                        size and implementation complexity. This helps
+                        differentiate production-grade work from minimal or
+                        tutorial-level projects.
                       </p>
                     </div>
                   </div>
                 </div>
               </div>
 
+              {/* Footer */}
               <div className="p-4 border-t border-border/50 bg-muted/20 text-center">
                 <p className="text-[10px] text-muted-foreground">
-                  This algorithm runs locally. It updates every time you sync.
+                  Scores are computed locally and refreshed on each repository
+                  sync.
                 </p>
               </div>
             </motion.div>

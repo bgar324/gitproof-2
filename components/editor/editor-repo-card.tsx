@@ -91,8 +91,8 @@ export function EditorRepoCard({
             className={cn(
               "p-1.5 rounded-md transition-all shrink-0",
               isSelected
-                ? "text-muted-foreground hover:text-red-500 hover:bg-red-500/10"
-                : "text-primary hover:bg-primary/10"
+                ? "text-muted-foreground hover:text-red-500 hover:bg-red-500/10 hover:cursor-pointer"
+                : "text-primary hover:bg-primary/10 hover:cursor-pointer"
             )}
             title={isSelected ? "Remove from Portfolio" : "Add to Portfolio"}
           >
@@ -109,7 +109,7 @@ export function EditorRepoCard({
         {isSelected && (
           <div className="space-y-4 mt-1">
             <div className="flex justify-between items-center pb-3 border-b border-border/50">
-              <div className="flex items-center gap-2">
+              {/* <div className="flex items-center gap-2">
                 {repo.isPublic !== false ? (
                   <span className="px-2 py-0.5 rounded text-[10px] bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium flex items-center gap-1">
                     <Globe size={10} /> Public
@@ -119,7 +119,7 @@ export function EditorRepoCard({
                     <Lock size={10} /> Private
                   </span>
                 )}
-              </div>
+              </div> */}
 
               <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
                 <span className="flex items-center gap-1">
@@ -149,7 +149,7 @@ export function EditorRepoCard({
                 <button
                   onClick={() => onRewrite(repo.id)}
                   disabled={isRewriting}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 border border-primary/20 text-[10px] font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-70 disabled:cursor-wait"
+                  className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 border border-primary/20 text-[10px] font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-70 disabled:cursor-wait hover:cursor-pointer"
                 >
                   {isRewriting ? (
                     <Loader2 size={10} className="animate-spin" />

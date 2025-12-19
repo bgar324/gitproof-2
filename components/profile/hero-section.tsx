@@ -37,8 +37,8 @@ export function HeroSection({ user, stats, insights, topTech }: HeroSectionProps
               href="/methodology"
               className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors group"
             >
-              <BookOpen size={14} className="group-hover:scale-110 transition-transform" />
-              <span className="underline decoration-dotted underline-offset-2">
+              <BookOpen size={14} className="text-muted-foreground group-hover:scale-110 transition-transform" />
+              <span className="text-muted-foreground transition-colors hover:underline decoration-dotted underline-offset-2 flex items-center gap-1 hover:cursor-pointer">
                 Read our methodology
               </span>
             </Link>

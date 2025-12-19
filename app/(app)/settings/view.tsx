@@ -127,7 +127,7 @@ export default function SettingsView({ user, settings }: SettingsViewProps) {
               Manage your profile and preferences.
             </p>
           </div>
-          <button
+          {/* <button
             onClick={handleSave}
             disabled={isSaving}
             className="h-10 px-6 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity text-sm font-medium flex items-center gap-2 shadow-lg"
@@ -138,7 +138,7 @@ export default function SettingsView({ user, settings }: SettingsViewProps) {
               <Save size={16} />
             )}
             {isSaving ? "Saving..." : "Save Changes"}
-          </button>
+          </button> */}
         </motion.div>
 
         <div className="space-y-2">
@@ -146,11 +146,11 @@ export default function SettingsView({ user, settings }: SettingsViewProps) {
             <AppearanceSection theme={theme} onThemeChange={setTheme} />
           </motion.div>
           <motion.div variants={itemMotion}>
-            <VisibilitySection
+            {/* <VisibilitySection
               isPublic={isPublic}
               username={username}
               onPublicChange={setIsPublic}
-            />
+            /> */}
           </motion.div>
           <motion.div variants={itemMotion}>
             <AccountSection
@@ -164,10 +164,10 @@ export default function SettingsView({ user, settings }: SettingsViewProps) {
             />
           </motion.div>
           <motion.div variants={itemMotion}>
-            <NotificationsSection
+            {/* <NotificationsSection
               emailNotifs={emailNotifs}
               onEmailNotifsChange={setEmailNotifs}
-            />
+            /> */}
           </motion.div>
           <motion.div variants={itemMotion}>
             <DangerZoneSection
