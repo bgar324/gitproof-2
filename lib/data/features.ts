@@ -1,4 +1,10 @@
-import { Rocket, Users, Sparkles, ShieldCheck, type LucideIcon } from "lucide-react";
+import {
+  Rocket,
+  Users,
+  Sparkles,
+  ShieldCheck,
+  type LucideIcon,
+} from "lucide-react";
 
 export interface Feature {
   id: string;
@@ -21,9 +27,9 @@ export const FEATURES: Feature[] = [
     iconBg: "bg-primary/10",
     borderHover: "hover:border-primary/50",
     glowColor: "bg-primary/5",
-    title: "Impact Scoring Algorithm",
+    title: "Impact Scoring Model",
     description:
-      "Our proprietary algorithm doesn't just count commits. It weighs stars, forks, PR complexity, and recency to calculate a true \"Impact Score\" out of 50.",
+      "Aggregates multiple repository signals—including stars, forks, pull request activity, and recency—into a single normalized score that reflects real project impact.",
     span: "md:col-span-2",
   },
   {
@@ -33,9 +39,9 @@ export const FEATURES: Feature[] = [
     iconBg: "bg-purple-500/10",
     borderHover: "hover:border-purple-500/50",
     glowColor: "bg-purple-500/5",
-    title: "20 Developer Archetypes",
+    title: "Developer Archetype Analysis",
     description:
-      "Are you \"The Machine\"? \"The Architect\"? Or \"The Open Source Hero\"? Discover your coding identity.",
+      "Classifies coding patterns across projects to highlight recurring strengths, workflows, and engineering tendencies—offering a higher-level view of how you build.",
     rowSpan: "md:row-span-2",
   },
   {
@@ -45,9 +51,9 @@ export const FEATURES: Feature[] = [
     iconBg: "bg-amber-500/10",
     borderHover: "hover:border-amber-500/50",
     glowColor: "bg-amber-500/5",
-    title: "AI-Powered Insights",
+    title: "Automated Codebase Insights",
     description:
-      "We use heuristics to detect specific strengths like \"High Test Coverage\" or \"Rapid Prototyping.\"",
+      "Identifies notable engineering signals such as testing discipline, prototyping speed, and architectural consistency using lightweight heuristics.",
   },
   {
     id: "verified",
@@ -56,8 +62,8 @@ export const FEATURES: Feature[] = [
     iconBg: "bg-emerald-500/10",
     borderHover: "hover:border-emerald-500/50",
     glowColor: "bg-emerald-500/5",
-    title: "Verified Public Profile",
+    title: "Verifiable Public Profiles",
     description:
-      "Share a read-only gitproof.com/u/you link on your resume. No embellishments, just proof.",
+      "Generate a read-only GitProof link suitable for resumes and applications. All data is sourced directly from public repositories—no manual input or embellishment.",
   },
 ];
