@@ -13,6 +13,7 @@ import {
   Trophy,
 } from "lucide-react";
 import { DemoReportCard } from "./demo-report-card";
+import { signIn } from "next-auth/react";
 import type { Session } from "next-auth";
 
 interface HeroProps {
@@ -21,7 +22,7 @@ interface HeroProps {
 
 export function Hero({ session }: HeroProps) {
   const handleLogin = () => {
-    window.location.href = "/api/auth/signin/github";
+    signIn("github", { callbackUrl: "/dashboard" });
   };
 
   return (
@@ -93,7 +94,7 @@ export function Hero({ session }: HeroProps) {
               <>
                 <button
                   onClick={handleLogin}
-                  className="group relative h-12 px-8 rounded-full bg-foreground text-background font-medium text-lg hover:scale-105 hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center gap-2"
+                  className="group relative h-12 px-8 rounded-full bg-foreground text-background font-medium text-lg hover:scale-105 hover:shadow-xl hover:shadow-primary/20 transition-all flex items-center gap-2 hover:cursor-pointer"
                 >
                   <Github size={20} />
                   <span>Connect GitHub</span>

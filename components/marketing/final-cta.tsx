@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { PenTool, Github } from "lucide-react";
+import { signIn } from "next-auth/react";
 import type { Session } from "next-auth";
 
 interface FinalCTAProps {
@@ -10,7 +11,7 @@ interface FinalCTAProps {
 
 export function FinalCTA({ session }: FinalCTAProps) {
   const handleLogin = () => {
-    window.location.href = "/api/auth/signin/github";
+    signIn("github", { callbackUrl: "/dashboard" });
   };
 
   return (
