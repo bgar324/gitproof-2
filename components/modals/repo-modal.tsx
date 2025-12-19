@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogPortal,
   DialogOverlay,
+  DialogTitle,
 } from "@/components/ui/dialog";
 import * as DialogPrimitive from "@radix-ui/react-dialog";
 import { RepoHealthSidebar, getHealthChecks } from "./repo-health-sidebar";
@@ -40,6 +41,11 @@ export default function RepoModal({ repo, isOpen, onClose }: RepoModalProps) {
       <DialogPortal>
         <DialogOverlay className="bg-zinc-950/60 backdrop-blur-md" />
         <DialogPrimitive.Content className="fixed left-[50%] top-[50%] z-50 w-full max-w-7xl h-[90vh] translate-x-[-50%] translate-y-[-50%] bg-background border border-border/50 shadow-2xl rounded-xl flex flex-col overflow-hidden ring-1 ring-white/10 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95">
+          {/* Visually hidden title for accessibility */}
+          <DialogTitle className="sr-only">
+            Repository: {repo.name}
+          </DialogTitle>
+
           {/* Header */}
           <div className="h-14 border-b border-border/60 bg-muted/20 backdrop-blur flex items-center justify-between px-6 shrink-0">
             <div className="flex items-center gap-4">
