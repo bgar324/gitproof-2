@@ -16,7 +16,7 @@ export default async function MethodologyPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Navbar */}
-      <Navbar session={session} variant="app" />
+      <Navbar session={session} variant="marketing" />
 
       {/* Add top padding to account for fixed navbar */}
       <div className="pt-16"></div>

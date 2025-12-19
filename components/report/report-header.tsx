@@ -25,7 +25,7 @@ export function getGrade(impactScore: number): GradeInfo {
 
 interface ReportHeaderProps {
   name: string | null;
-  username: string;
+  username: string | null;
   image: string | null;
   archetypeTitle: string;
   archetypeIcon: LucideIcon;
@@ -67,7 +67,7 @@ export function ReportHeader({
               {name}
             </h2>
             <p className="text-sm text-muted-foreground font-mono mb-3">
-              @{username}
+              @{username || "user"}
             </p>
 
             {/* Archetype Chip */}
