@@ -478,39 +478,59 @@ The **Impact Score** (0-50) combines three weighted components:
 Score = min(round(Popularity + Recency + Maturity), 50)
 ```
 
-### 1. Popularity (~40%)
-Logarithmic scale to prevent viral repos from dominating:
+### 1. Popularity (0-40 points, ~40-45%)
+Logarithmic scale with increased multiplier to better reward popular projects:
 
 ```javascript
-Popularity = log₂(stars + forks × 2 + 1) × 3
+Popularity = log₂(stars + forks × 2 + 1) × 4.5
+Popularity = min(Popularity, 40)
 ```
 
 **Examples**:
-- 100 stars, 10 forks → ~20 points
-- 1,000 stars, 100 forks → ~30 points
-- 10,000 stars, 1,000 forks → ~40 points
+- 100 stars, 10 forks → ~30 points
+- 1,000 stars, 100 forks → ~45 points (capped at 40)
+- 10,000 stars, 1,000 forks → ~60 points (capped at 40)
 
-### 2. Recency (~30%)
-Penalizes inactive projects:
-
-```
-< 7 days ago:   +15 points (S-tier)
-< 30 days ago:  +10 points (Active)
-< 90 days ago:  +5 points (Recent)
-else:           +0 points (Archived)
-```
-
-### 3. Maturity (~30%)
-Assesses project quality:
+### 2. Recency (0-15 points, ~25-30%)
+Graceful decay that rewards maintained projects, not just recently pushed:
 
 ```
-description > 20 chars:  +5 points
-has homepage:            +3 points
-has topics:              +2 points
-readme > 200 chars:      +5 points
+< 7 days ago:    +15 points (S-tier: Last week)
+< 30 days ago:   +12 points (A-tier: Last month)
+< 90 days ago:   +8 points  (B-tier: Last quarter)
+< 180 days ago:  +5 points  (C-tier: Last 6 months)
+< 365 days ago:  +2 points  (D-tier: Last year)
+else:            +0 points  (Abandoned)
 ```
 
-**Max**: 15 points from maturity
+### 3. Maturity (0-15 points, ~25-30%)
+Multi-factor assessment of project quality:
+
+```
+Description:
+  > 100 chars:  +5 points (Detailed)
+  > 20 chars:   +3 points (Basic)
+
+README:
+  > 2000 chars: +5 points (Comprehensive)
+  > 500 chars:  +3 points (Good)
+  > 100 chars:  +1 point  (Minimal)
+
+Homepage:       +3 points
+
+Topics:
+  ≥ 3 tags:     +3 points (Well-tagged)
+  ≥ 1 tag:      +1 point  (Basic)
+```
+
+**Max**: 15 points from maturity (capped)
+
+### User Score Aggregation
+Instead of a simple average, we use a **weighted average of top 6 projects**:
+```
+UserScore = top1×50% + top2×12.5% + top3×12.5% + top4×8.33% + top5×8.33% + top6×8.33%
+```
+This emphasizes quality over quantity - your best project carries 50% of the weight.
 
 ### Example
 
@@ -524,10 +544,15 @@ readme > 200 chars:      +5 points
 
 **Calculation**:
 ```
-Popularity = log₂(250 + 30×2 + 1) × 3 = 25 points
-Recency = 10 points (< 30 days)
-Maturity = 5 + 3 + 2 + 5 = 15 points
-Total = 25 + 10 + 15 = 50 points ✨
+Popularity = log₂(250 + 30×2 + 1) × 4.5 = 37 points (was ~25 with old formula)
+Recency = 12 points (< 30 days, A-tier)
+Maturity:
+  - Description (42 chars): +3
+  - README (1500 chars): +3
+  - Homepage: +3
+  - Topics (3 tags): +3
+  = 12 points
+Total = 37 + 12 + 12 = 50 points (capped) ✨
 ```
 
 ---

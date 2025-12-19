@@ -18,29 +18,41 @@ export function getHealthChecks(repo: {
   topics?: string[];
   homepage?: string | null;
 }): HealthCheck[] {
+  const descLength = repo.desc?.length || 0;
+  const readmeLength = repo.readme?.length || 0;
+  const topicCount = repo.topics?.length || 0;
+
   return [
     {
-      label: "Meaningful Description",
-      passed: !!(repo.desc && repo.desc.length > 15),
-      tip: "Descriptions under 15 chars look lazy. Explain *what* it does.",
-      value: repo.desc ? `${repo.desc.length} chars` : "Missing",
+      label: "Quality Description",
+      passed: descLength > 100,
+      tip: descLength > 20
+        ? "Good start! Write 100+ characters for maximum impact score (+5 points)."
+        : "Add a detailed description (100+ chars) to earn +5 maturity points.",
+      value: descLength > 0 ? `${descLength} chars` : "Missing",
     },
     {
-      label: "Comprehensive ReadMe",
-      passed: !!(repo.readme && repo.readme.length > 300),
-      tip: "Your ReadMe is too short (<300 chars). Add 'Setup' and 'Features'.",
-      value: repo.readme ? `${repo.readme.length} chars` : "Missing",
+      label: "Comprehensive README",
+      passed: readmeLength > 2000,
+      tip: readmeLength > 500
+        ? "Good documentation! Write 2000+ characters for maximum impact (+5 points)."
+        : readmeLength > 100
+        ? "Expand your README to 500+ chars for +3 points, or 2000+ for +5 points."
+        : "Add a detailed README (500+ chars) to earn up to +5 maturity points.",
+      value: readmeLength > 0 ? `${readmeLength} chars` : "Missing",
     },
     {
-      label: "Discoverable Tags",
-      passed: !!(repo.topics && repo.topics.length >= 3),
-      tip: "Add at least 3 tags (e.g., 'react', 'database') on GitHub.",
-      value: repo.topics ? `${repo.topics.length} tags` : "0 tags",
+      label: "Well-Tagged Repository",
+      passed: topicCount >= 3,
+      tip: topicCount >= 1
+        ? "Add 2 more tags to earn +3 maturity points (currently +1)."
+        : "Add 3+ relevant tags (e.g., 'react', 'typescript') for +3 maturity points.",
+      value: `${topicCount} tag${topicCount !== 1 ? 's' : ''}`,
     },
     {
       label: "Live Demo / Homepage",
       passed: !!repo.homepage,
-      tip: "Recruiters want to click things. Add a URL to the repo 'About' section.",
+      tip: "Add a live demo URL or homepage to earn +3 maturity points. Recruiters love clicking things!",
       value: repo.homepage ? "Linked" : "Missing",
     },
   ];

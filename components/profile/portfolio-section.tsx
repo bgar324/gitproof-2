@@ -1,5 +1,9 @@
+"use client";
+
+import { useState } from "react";
 import { Code2 } from "lucide-react";
 import { PublicRepoCard } from "./public-repo-card";
+import { ScoreModal } from "@/components/dashboard/score-modal";
 import type { Project } from "@prisma/client";
 
 interface PortfolioSectionProps {
@@ -7,6 +11,8 @@ interface PortfolioSectionProps {
 }
 
 export function PortfolioSection({ projects }: PortfolioSectionProps) {
+  const [showScoreModal, setShowScoreModal] = useState(false);
+
   return (
     <section className="max-w-6xl mx-auto px-6 py-20">
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-6 border-b border-border">
@@ -14,10 +20,19 @@ export function PortfolioSection({ projects }: PortfolioSectionProps) {
           <h2 className="text-3xl font-serif font-bold text-foreground">
             Selected Work
           </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            High-impact contributions verified by analysis.
-          </p>
+
+          <div className="text-sm text-muted-foreground mt-1 flex items-center gap-2 flex-wrap">
+            <span>High-impact contributions verified by analysis</span>
+            <span className="text-border">•</span>
+            <button
+              onClick={() => setShowScoreModal(true)}
+              className="text-muted-foreground hover:text-primary/80 underline decoration-dotted underline-offset-2 transition-colors hover:cursor-pointer"
+            >
+              How impact scores are calculated
+            </button>
+          </div>
         </div>
+
         <span className="text-xs font-mono text-muted-foreground bg-secondary px-3 py-1.5 rounded-full border border-border">
           {projects.length} Projects Displayed
         </span>
@@ -37,6 +52,11 @@ export function PortfolioSection({ projects }: PortfolioSectionProps) {
           projects.map((repo) => <PublicRepoCard key={repo.id} repo={repo} />)
         )}
       </div>
+
+      <ScoreModal
+        isOpen={showScoreModal}
+        onClose={() => setShowScoreModal(false)}
+      />
     </section>
   );
 }

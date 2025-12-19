@@ -1,4 +1,5 @@
-import { Layers } from "lucide-react";
+import { Layers, BookOpen } from "lucide-react";
+import Link from "next/link";
 import { ReportCard } from "@/components/report-card";
 import type { ReportUser } from "@/components/report-card";
 import type { UserInsights, UserStats } from "@/lib/stats";
@@ -31,6 +32,16 @@ export function HeroSection({ user, stats, insights, topTech }: HeroSectionProps
               {user.bio ||
                 "Full-stack engineer building scalable systems. Verified by GitProof analysis."}
             </p>
+
+            <Link
+              href="/methodology"
+              className="inline-flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors group"
+            >
+              <BookOpen size={14} className="group-hover:scale-110 transition-transform" />
+              <span className="underline decoration-dotted underline-offset-2">
+                Read our methodology
+              </span>
+            </Link>
 
             {topTech.length > 0 && (
               <div className="space-y-3 pt-2">

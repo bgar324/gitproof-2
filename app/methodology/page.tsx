@@ -131,28 +131,40 @@ export default async function MethodologyPage() {
             <div className="bg-card border border-border rounded-lg p-6 font-mono text-sm my-6">
               <div className="space-y-2">
                 <p className="text-muted-foreground">
-                  {"// Popularity Component (~40% weight)"}
+                  {"// Popularity Component (0-40 points, ~40-45% weight)"}
                 </p>
-                <p>popularity = log₂(stars + forks × 2 + 1) × 3</p>
+                <p>popularity = log₂(stars + forks × 2 + 1) × 4.5</p>
+                <p>popularity = min(popularity, 40)</p>
+
                 <p className="text-muted-foreground mt-4">
-                  {"// Recency Component (~30% weight)"}
+                  {"// Recency Component (0-15 points, ~25-30% weight)"}
                 </p>
-                <p>if daysSincePush &lt; 7: recency = 15</p>
-                <p>if daysSincePush &lt; 30: recency = 10</p>
-                <p>if daysSincePush &lt; 90: recency = 5</p>
-                <p>else: recency = 0</p>
+                <p>if daysSincePush &lt; 7: recency = 15    {"// S-tier"}</p>
+                <p>if daysSincePush &lt; 30: recency = 12   {"// A-tier"}</p>
+                <p>if daysSincePush &lt; 90: recency = 8    {"// B-tier"}</p>
+                <p>if daysSincePush &lt; 180: recency = 5   {"// C-tier"}</p>
+                <p>if daysSincePush &lt; 365: recency = 2   {"// D-tier"}</p>
+                <p>else: recency = 0  {"// Abandoned"}</p>
+
                 <p className="text-muted-foreground mt-4">
-                  {"// Maturity Component (~30% weight)"}
+                  {"// Maturity Component (0-15 points, ~25-30% weight)"}
                 </p>
                 <p>maturity = 0</p>
-                <p>if description.length &gt; 20: maturity += 5</p>
-                <p>if homepage exists: maturity += 3</p>
-                <p>if topics.length &gt; 0: maturity += 2</p>
+                <p>if description.length &gt; 100: maturity += 5  {"// Detailed"}</p>
+                <p>else if description.length &gt; 20: maturity += 3  {"// Basic"}</p>
+                <p className="mt-2">if readme.length &gt; 2000: maturity += 5  {"// Comprehensive"}</p>
+                <p>else if readme.length &gt; 500: maturity += 3  {"// Good"}</p>
+                <p>else if readme.length &gt; 100: maturity += 1  {"// Minimal"}</p>
+                <p className="mt-2">if homepage exists: maturity += 3</p>
+                <p className="mt-2">if topics.length ≥ 3: maturity += 3  {"// Well-tagged"}</p>
+                <p>else if topics.length ≥ 1: maturity += 1  {"// Basic tags"}</p>
+                <p>maturity = min(maturity, 15)</p>
+
                 <p className="text-muted-foreground mt-4">
                   {"// Final Score"}
                 </p>
                 <p className="text-primary">
-                  score = min(popularity + recency + maturity, 50)
+                  score = min(round(popularity + recency + maturity), 50)
                 </p>
               </div>
             </div>
@@ -161,14 +173,27 @@ export default async function MethodologyPage() {
               1.3 Portfolio Aggregation
             </h3>
             <p className="text-foreground/80 leading-relaxed">
-              We take the <strong>average of the top 6 project scores</strong>{" "}
-              to represent overall impact. This approach:
+              We use a <strong>weighted average of the top 6 projects</strong>,
+              emphasizing your best work. Your top project carries 50% of the weight,
+              with remaining projects contributing progressively less:
             </p>
+            <div className="bg-card border border-border rounded-lg p-6 font-mono text-sm my-6">
+              <div className="space-y-1">
+                <p>score = (</p>
+                <p className="ml-4">top1 × 50.0% +    {"// Best project"}</p>
+                <p className="ml-4">top2 × 12.5% +    {"// 2nd best"}</p>
+                <p className="ml-4">top3 × 12.5% +    {"// 3rd best"}</p>
+                <p className="ml-4">top4 × 8.33% +    {"// 4th best"}</p>
+                <p className="ml-4">top5 × 8.33% +    {"// 5th best"}</p>
+                <p className="ml-4">top6 × 8.33%      {"// 6th best"}</p>
+                <p>)</p>
+              </div>
+            </div>
             <ul className="list-disc pl-6 space-y-2 text-foreground/80 my-4">
-              <li>Rewards developers with multiple high-quality projects</li>
-              <li>Prevents single outlier projects from skewing results</li>
-              <li>Encourages consistent quality across portfolio</li>
-              <li>Scales fairly for developers at different career stages</li>
+              <li>Rewards quality over quantity - one great project matters more than many mediocre ones</li>
+              <li>Prevents dilution from having too many projects</li>
+              <li>Still encourages portfolio diversity (6 projects considered)</li>
+              <li>Fair to focused developers with fewer, higher-impact projects</li>
             </ul>
           </div>
         </section>

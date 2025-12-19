@@ -31,15 +31,31 @@ const isRecord = (value: unknown): value is Record<string, unknown> =>
 export function calculateUserStats(user: UserWithProjects): UserStats {
   const { projects, profileData } = user;
 
-  // 1. Calculate Impact Score - average of top 6 projects (or all if fewer)
+  // 1. Calculate Impact Score - weighted average favoring quality over quantity
+  // Top project: 50% weight, next 2: 25% each (12.5% each), next 3: 25% total (8.33% each)
   const projectScores = projects
     .map((p) => p.impactScore)
     .sort((a, b) => b - a);
-  const topScores = projectScores.slice(0, 6);
-  const impactScore =
-    topScores.length > 0
-      ? Math.round(topScores.reduce((sum, score) => sum + score, 0) / topScores.length)
-      : 0;
+
+  let impactScore = 0;
+  if (projectScores.length > 0) {
+    const top1 = projectScores[0] || 0;
+    const top2 = projectScores[1] || 0;
+    const top3 = projectScores[2] || 0;
+    const top4 = projectScores[3] || 0;
+    const top5 = projectScores[4] || 0;
+    const top6 = projectScores[5] || 0;
+
+    // Weighted formula: emphasizes top projects more than average
+    impactScore = Math.round(
+      top1 * 0.50 +     // Best project = 50%
+      top2 * 0.125 +    // 2nd best = 12.5%
+      top3 * 0.125 +    // 3rd best = 12.5%
+      top4 * 0.083 +    // 4th best = 8.33%
+      top5 * 0.083 +    // 5th best = 8.33%
+      top6 * 0.083      // 6th best = 8.33%
+    );
+  }
 
   // 2. Calculate Total Contributions
   // Try to use real GitHub data first, fallback to calculated
