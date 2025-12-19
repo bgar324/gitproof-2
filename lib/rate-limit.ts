@@ -11,6 +11,25 @@ interface RateLimitState {
 // In production, this should use Redis or similar
 const rateLimitCache = new Map<string, RateLimitState>();
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
+const getHeaderValue = (headers: unknown, key: string): string | undefined => {
+  if (!isRecord(headers)) return undefined;
+  const value = headers[key];
+  return typeof value === "string" ? value : undefined;
+};
+
+interface GraphQLErrorItem {
+  type?: string;
+  message?: string;
+}
+
+interface GraphQLResponseShape {
+  errors?: GraphQLErrorItem[];
+  headers?: Record<string, string>;
+}
+
 export class GitHubRateLimitError extends Error {
   constructor(
     public resetAt: Date,
@@ -47,21 +66,28 @@ export function checkRateLimit(userEmail: string): void {
 /**
  * Parse GitHub GraphQL error for rate limit info
  */
-export function parseGitHubError(error: any): {
+export function parseGitHubError(error: unknown): {
   isRateLimit: boolean;
   resetAt: Date | null;
   remaining: number;
 } {
   // GitHub GraphQL rate limit error structure
-  if (error?.response?.errors) {
-    const rateLimitError = error.response.errors.find(
-      (e: any) => e.type === "RATE_LIMITED" || e.message?.includes("rate limit")
+  if (isRecord(error) && isRecord(error.response)) {
+    const response = error.response as GraphQLResponseShape;
+    const rateLimitError = response.errors?.find(
+      (e) => e.type === "RATE_LIMITED" || e.message?.includes("rate limit")
     );
 
     if (rateLimitError) {
       // Try to extract reset time from headers
-      const resetHeader = error.response.headers?.["x-ratelimit-reset"];
-      const remainingHeader = error.response.headers?.["x-ratelimit-remaining"];
+      const resetHeader = getHeaderValue(
+        response.headers,
+        "x-ratelimit-reset"
+      );
+      const remainingHeader = getHeaderValue(
+        response.headers,
+        "x-ratelimit-remaining"
+      );
 
       return {
         isRateLimit: true,
@@ -72,19 +98,19 @@ export function parseGitHubError(error: any): {
   }
 
   // Check for REST API rate limit (status 403 with rate limit message)
-  if (
-    error?.status === 403 &&
-    error?.message?.toLowerCase().includes("rate limit")
-  ) {
-    return {
-      isRateLimit: true,
-      resetAt: error.headers?.["x-ratelimit-reset"]
-        ? new Date(parseInt(error.headers["x-ratelimit-reset"]) * 1000)
-        : null,
-      remaining: error.headers?.["x-ratelimit-remaining"]
-        ? parseInt(error.headers["x-ratelimit-remaining"])
-        : 0,
-    };
+  if (isRecord(error)) {
+    const status = typeof error.status === "number" ? error.status : undefined;
+    const message = typeof error.message === "string" ? error.message : "";
+    if (status === 403 && message.toLowerCase().includes("rate limit")) {
+      const headers = isRecord(error.headers) ? error.headers : undefined;
+      const resetHeader = getHeaderValue(headers, "x-ratelimit-reset");
+      const remainingHeader = getHeaderValue(headers, "x-ratelimit-remaining");
+      return {
+        isRateLimit: true,
+        resetAt: resetHeader ? new Date(parseInt(resetHeader) * 1000) : null,
+        remaining: remainingHeader ? parseInt(remainingHeader) : 0,
+      };
+    }
   }
 
   return {
@@ -127,17 +153,18 @@ export async function withRetry<T>(
   maxRetries: number = 3,
   baseDelay: number = 1000
 ): Promise<T> {
-  let lastError: any;
+  let lastError: unknown;
 
   for (let attempt = 0; attempt < maxRetries; attempt++) {
     try {
       return await fn();
-    } catch (error: any) {
+    } catch (error: unknown) {
       lastError = error;
 
       // Don't retry rate limit errors or auth errors
       const { isRateLimit } = parseGitHubError(error);
-      if (isRateLimit || error.message?.includes("authentication")) {
+      const message = error instanceof Error ? error.message : "";
+      if (isRateLimit || message.includes("authentication")) {
         throw error;
       }
 

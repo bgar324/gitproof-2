@@ -28,9 +28,6 @@ export function TopReposHeader({ repoCount, onInfoClick }: TopReposHeaderProps) 
         className="group flex items-center gap-1 text-xs font-medium text-primary hover:text-primary/80 transition-colors pb-1"
       >
         View Archive
-        <span className="bg-primary/10 text-primary px-1.5 py-0.5 rounded-md ml-1 text-[10px] group-hover:bg-primary/20 transition-colors">
-          {repoCount}
-        </span>
         <ArrowUpRight
           size={12}
           className="transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"

@@ -2,18 +2,18 @@
 
 import { useTheme } from "next-themes";
 import { Sun, Moon, Laptop } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { cn } from "@/lib/utils";
 
 export function ThemeToggle() {
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  if (!mounted) return <div className="w-24 h-8" />;
+  if (!isClient) return <div className="w-24 h-8" />;
 
   const buttons = [
     { theme: "light", icon: Sun, label: "Light Mode" },

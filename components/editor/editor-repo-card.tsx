@@ -13,11 +13,12 @@ import {
 } from "lucide-react";
 import { cn, formatDate, getScoreColor } from "@/lib/utils";
 import { getLanguageColor } from "@/lib/language-colors";
+import type { ProjectWithPublic } from "./types";
 
 interface EditorRepoCardProps {
-  repo: any;
+  repo: ProjectWithPublic;
   isSelected: boolean;
-  onToggle: (repo: any) => void;
+  onToggle: (repo: ProjectWithPublic) => void;
   onUpdateDesc: (id: string, newDesc: string) => void;
   onRewrite: (id: string) => void;
   isRewriting: boolean;

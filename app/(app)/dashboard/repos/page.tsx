@@ -29,15 +29,16 @@ export default async function AllReposPage() {
   // 3. Check if cache is stale (> 1 hour old) - same as dashboard
   const ONE_HOUR = 60 * 60 * 1000;
   const lastSyncedAt = user.lastSyncedAt || null;
+  const now = new Date();
   const isStale = !lastSyncedAt ||
-    (Date.now() - lastSyncedAt.getTime()) > ONE_HOUR;
+    (now.getTime() - lastSyncedAt.getTime()) > ONE_HOUR;
 
   // 3. Map to expected format
   const repos = user.projects.map((p) => ({
     id: p.githubId,
     name: p.name,
     url: p.url,
-    desc: p.desc,
+    desc: p.desc || "",
     stars: p.stars,
     forks: p.forks,
     score: p.impactScore,
@@ -45,10 +46,12 @@ export default async function AllReposPage() {
     color: getLanguageColor(p.language),
     topics: p.topics,
     readme: p.readme || "",
+    languages: p.language ? [p.language] : [],
     homepage: p.homepage,
     lastPush: p.lastPush.toISOString(),
     isPublic: true, // All synced repos are public
     updated: p.lastPush.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+    breakdown: { stars: p.stars, forks: p.forks, updatedAt: p.lastPush.toISOString() },
   }));
 
   return (

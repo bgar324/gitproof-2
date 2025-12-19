@@ -3,6 +3,7 @@
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { generateText } from "ai";
 import { db } from "@/lib/db";
+import type { Prisma } from "@prisma/client";
 import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { syncUserData } from "@/lib/sync";
@@ -36,7 +37,7 @@ export async function triggerSync() {
     await db.user.update({
       where: { email: session.user.email },
       data: {
-        profileData: sanitizedData as any,
+        profileData: sanitizedData as unknown as Prisma.InputJsonValue,
         lastSyncedAt: new Date(),
       },
     });
@@ -192,7 +193,7 @@ export async function generateUserBio() {
       languageMap.set(p.language, (languageMap.get(p.language) || 0) + 1);
     }
     if (p.topics && Array.isArray(p.topics)) {
-      p.topics.forEach((topic: any) => topicsSet.add(topic));
+      p.topics.forEach((topic) => topicsSet.add(topic));
     }
   });
 
@@ -540,13 +541,14 @@ export async function deleteUserAccount() {
     console.log("User must re-authorize GitHub OAuth to sign in again");
 
     return { success: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    const errorMeta =
+      typeof error === "object" && error !== null ? error : undefined;
     console.error("❌ Account obliteration failed:", error);
-    console.error("❌ Error details:", {
-      message: error.message,
-      code: error.code,
-      meta: error.meta,
-    });
-    throw new Error(`Failed to delete account: ${error.message}`);
+    if (errorMeta) {
+      console.error("❌ Error details:", errorMeta);
+    }
+    throw new Error(`Failed to delete account: ${message}`);
   }
 }

@@ -3,16 +3,17 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
-  Search, ArrowLeft, GitFork, Star, Code2, ArrowUpRight, ArrowUpDown 
+  Search, ArrowLeft, GitFork, Star, Code2, ArrowUpRight 
 } from "lucide-react";
 import Link from "next/link";
 import RepoModal from "@/components/repo-modal";
 import { cn, getTimeAgo } from "@/lib/utils";
 import { triggerSync } from "@/app/actions";
 import { useRouter } from "next/navigation";
+import type { GithubRepo } from "@/lib/github";
 
 // --- REUSED CARD COMPONENT (Identical to Dashboard) ---
-const RepoCard = ({ repo, onClick }: { repo: any, onClick: () => void }) => (
+const RepoCard = ({ repo, onClick }: { repo: GithubRepo; onClick: () => void }) => (
   <motion.div
     layout
     initial={{ opacity: 0, scale: 0.95 }}
@@ -66,13 +67,13 @@ export default function ReposView({
   lastSyncedAt,
   isStale,
 }: {
-  repos: any[];
+  repos: GithubRepo[];
   lastSyncedAt: Date | null;
   isStale: boolean;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
-  const [selectedRepo, setSelectedRepo] = useState<any>(null);
+  const [selectedRepo, setSelectedRepo] = useState<GithubRepo | null>(null);
   const [sortMode, setSortMode] = useState<"impact" | "stars" | "recent">("impact");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [timeAgo, setTimeAgo] = useState(
@@ -102,7 +103,7 @@ export default function ReposView({
 
   // --- SORTING & FILTERING LOGIC ---
   const filteredRepos = useMemo(() => {
-    let processed = repos.filter(repo => 
+    const processed = repos.filter(repo => 
       repo.name.toLowerCase().includes(search.toLowerCase()) || 
       repo.desc.toLowerCase().includes(search.toLowerCase())
     );
@@ -205,7 +206,7 @@ export default function ReposView({
           {filteredRepos.length === 0 && (
             <div className="col-span-full py-20 flex flex-col items-center justify-center text-muted-foreground opacity-60">
               <Search size={40} strokeWidth={1} className="mb-4" />
-              <p>No repositories found matching "{search}"</p>
+              <p>No repositories found matching &quot;{search}&quot;</p>
             </div>
           )}
         </div>

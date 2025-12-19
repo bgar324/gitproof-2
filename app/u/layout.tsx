@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { GitGraph } from "lucide-react";
 import { useSession } from "next-auth/react";
 
@@ -30,13 +31,19 @@ export default function PublicLayout({
               href="/dashboard"
               className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded-full transition-all"
             >
-              <img
-                src={session.user.image || ""}
-                alt={session.user.name || "User"}
-                className="w-6 h-6 rounded-full"
-              />
+              {session.user.image ? (
+                <Image
+                  src={session.user.image}
+                  alt={session.user.name || "User"}
+                  width={24}
+                  height={24}
+                  className="w-6 h-6 rounded-full"
+                />
+              ) : (
+                <div className="w-6 h-6 rounded-full bg-secondary" />
+              )}
               <span className="text-sm font-medium text-foreground hidden sm:inline">
-                @{(session.user as any).username || session.user.name}
+                @{(session.user as { username?: string | null }).username || session.user.name || "user"}
               </span>
             </Link>
           ) : (

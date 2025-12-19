@@ -14,7 +14,7 @@ export default async function DashboardPage() {
   }
 
   // 2. Try DB cache first (include projects for topRepos)
-  let user = await db.user.findUnique({
+  const user = await db.user.findUnique({
     where: { email: session.user.email },
     include: {
       projects: {
@@ -31,8 +31,9 @@ export default async function DashboardPage() {
   // 3. Check if cache is stale (> 1 hour old)
   const ONE_HOUR = 60 * 60 * 1000;
   const lastSyncedAt = user.lastSyncedAt || null;
+  const now = new Date();
   const isStale = !lastSyncedAt ||
-    (Date.now() - lastSyncedAt.getTime()) > ONE_HOUR;
+    (now.getTime() - lastSyncedAt.getTime()) > ONE_HOUR;
   const cachedData = (user.profileData || {}) as Partial<GithubProfile>;
 
   // Map projects to topRepos format
@@ -40,7 +41,7 @@ export default async function DashboardPage() {
     id: p.githubId,
     name: p.name,
     url: p.url,
-    desc: p.desc,
+    desc: p.desc || "",
     stars: p.stars,
     forks: p.forks,
     score: p.impactScore,
@@ -48,6 +49,7 @@ export default async function DashboardPage() {
     color: getLanguageColor(p.language),
     topics: p.topics,
     readme: p.readme || "",
+    languages: p.language ? [p.language] : [],
     homepage: p.homepage,
     lastPush: p.lastPush.toISOString(),
     isPublic: true,

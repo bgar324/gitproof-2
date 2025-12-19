@@ -46,17 +46,17 @@ const scenarios = [
   },
 ];
 
+const messages = [
+  "// Status: 404 — route not found",
+  "// git checkout -b page-exists",
+  "// endpoint pending deployment",
+  "// commit missing",
+  "// not-found.tsx rendered",
+];
+
 export default function NotFound() {
   const [hovered, setHovered] = useState<number | null>(null);
   const [msg, setMsg] = useState(0);
-
-  const messages = [
-    "// Status: 404 — route not found",
-    "// git checkout -b page-exists",
-    "// endpoint pending deployment",
-    "// commit missing",
-    "// not-found.tsx rendered",
-  ];
 
   useEffect(() => {
     const id = setInterval(

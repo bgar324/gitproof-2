@@ -1,10 +1,12 @@
 import { Layers } from "lucide-react";
 import { ReportCard } from "@/components/report-card";
+import type { ReportUser } from "@/components/report-card";
+import type { UserInsights, UserStats } from "@/lib/stats";
 
 interface HeroSectionProps {
-  user: any;
-  stats: any;
-  insights: any;
+  user: ReportUser;
+  stats: UserStats;
+  insights: UserInsights;
   topTech: string[];
 }
 

@@ -122,7 +122,7 @@ export default function DashboardLoading() {
           <Skeleton className="p-6 h-[300px] bg-card/50 backdrop-blur-sm flex flex-col gap-4">
             <Skeleton className="h-6 w-1/3 bg-secondary/40" />
             <div className="flex-1 space-y-3 pt-4">
-              {[...Array(5)].map((_, i) => (
+              {[72, 80, 88, 76, 84].map((width, i) => (
                 <div key={i} className="space-y-1">
                   <div className="flex justify-between">
                     <Skeleton className="h-2 w-12 rounded-full bg-secondary/30" />
@@ -130,7 +130,7 @@ export default function DashboardLoading() {
                   </div>
                   <Skeleton
                     className="h-2 w-full rounded-full bg-secondary/20"
-                    style={{ width: `${Math.random() * 40 + 60}%` }}
+                    style={{ width: `${width}%` }}
                   />
                 </div>
               ))}

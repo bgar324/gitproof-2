@@ -1,9 +1,10 @@
 import { db } from "@/lib/db";
 import { fetchGithubProfile, fetchUserRepos } from "@/lib/github";
+import type { GithubRepoSummary } from "@/lib/github";
 import { sanitizeString, sanitizeStringArray } from "@/lib/sanitize";
 
 // ... keep calculateScore function exactly as is ...
-function calculateScore(repo: any) {
+function calculateScore(repo: GithubRepoSummary) {
   const popularity =
     Math.log2(repo.stargazers_count + repo.forks_count * 2 + 1) * 3;
   const daysSincePush =
@@ -54,8 +55,6 @@ export async function syncUserData(
     },
   });
 
-  let syncedCount = 0;
-
   for (const repo of repos) {
     const score = calculateScore(repo);
 
@@ -98,7 +97,6 @@ export async function syncUserData(
         readme: sanitizeString(repo.readme),
       },
     });
-    syncedCount++;
   }
 
   return user;

@@ -20,22 +20,31 @@ import {
   Workflow, // For "The Automator"
   Blocks, // For "The Builder"
   Trophy, // For "The Champion"
-  Moon, // For "The Night Owl"
   Zap as Lightning, // For "The Streak Master"
   Heart, // For "Open Source Hero"
   Target, // For "The Perfectionist"
   Shield, // For "The Maintainer"
 } from "lucide-react";
-import type { UserInsights } from "@/lib/stats";
+import Image from "next/image";
+import type { UserInsights, UserStats } from "@/lib/stats";
+import type { Project, User } from "@prisma/client";
+import type { GithubProfile } from "@/lib/github";
 
 // --- HELPERS ---
+
+interface StatBoxProps {
+  label: string;
+  value: string | number;
+  sub?: string;
+  subColor?: string;
+}
 
 const StatBox = ({
   label,
   value,
   sub,
   subColor = "text-muted-foreground",
-}: any) => (
+}: StatBoxProps) => (
   <div className="flex flex-col items-center justify-center p-4 hover:bg-white/[0.02] transition-colors group">
     <span className="font-serif text-2xl text-foreground font-medium tracking-tight group-hover:scale-105 transition-transform">
       {value}
@@ -85,16 +94,21 @@ const InsightRow = ({
 
 // --- MAIN COMPONENT ---
 
+export type ReportUser = User & {
+  projects: Project[];
+  profileData?: unknown;
+};
+
 export function ReportCard({
   user,
   stats,
   insights,
   showGrowthFocus = false,
   className,
-  totalRepoCount
+  totalRepoCount,
 }: {
-  user: any;
-  stats: any;
+  user: ReportUser;
+  stats: UserStats;
   insights?: UserInsights;
   showGrowthFocus?: boolean;
   className?: string;
@@ -103,7 +117,7 @@ export function ReportCard({
   // 1. Enhanced Archetype Logic (Icon + Title + Color)
   const getArchetype = () => {
     // Extract additional data from user
-    const profileData = (user.profileData || {}) as any;
+    const profileData = (user.profileData || {}) as Partial<GithubProfile>;
     const pullRequests = profileData.pullRequests || 0;
     const streak = profileData.streak || 0;
     const projects = user.projects || [];
@@ -115,7 +129,7 @@ export function ReportCard({
     let recentActivity = 0;
     let documentedProjects = 0;
 
-    projects.forEach((p: any) => {
+    projects.forEach((p) => {
       if (p.language) {
         languageMap.set(p.language, (languageMap.get(p.language) || 0) + 1);
       }
@@ -214,7 +228,7 @@ export function ReportCard({
     }
 
     // 16. THE AUTOMATOR (Workflow specialist - if we detect CI/CD)
-    const hasWorkflows = projects.some((p: any) =>
+    const hasWorkflows = projects.some((p) =>
       p.topics?.some((t: string) =>
         ['ci', 'cd', 'automation', 'github-actions'].includes(t.toLowerCase())
       )
@@ -281,11 +295,17 @@ export function ReportCard({
           <div className="flex gap-5 items-center">
             {/* Avatar (Clean, no overlap) */}
             <div className="w-20 h-20 rounded-full border-2 border-background shadow-lg overflow-hidden bg-secondary">
-              <img
-                src={user.image || ""}
-                alt={user.name || "Dev"}
-                className="w-full h-full object-cover"
-              />
+              {user.image ? (
+                <Image
+                  src={user.image}
+                  alt={user.name || "Dev"}
+                  width={80}
+                  height={80}
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full bg-secondary" />
+              )}
             </div>
 
             {/* Identity */}

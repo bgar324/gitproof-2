@@ -1,14 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
   X,
-  CheckCircle2,
-  Circle,
-  AlertCircle,
   ExternalLink,
   Eye,
   FileCode,
@@ -19,23 +16,24 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import type { GithubRepo } from "@/lib/github";
 
 export default function RepoModal({
   repo,
   isOpen,
   onClose,
 }: {
-  repo: any;
+  repo: GithubRepo | null;
   isOpen: boolean;
   onClose: () => void;
 }) {
-  const [mounted, setMounted] = useState(false);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
   const [viewMode, setViewMode] = useState<"preview" | "raw">("preview");
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -56,7 +54,7 @@ export default function RepoModal({
     }
   };
 
-  if (!mounted || !repo) return null;
+  if (!isClient || !repo) return null;
 
   // --- DYNAMIC JUDGE LOGIC ---
   const checks = [
@@ -88,17 +86,6 @@ export default function RepoModal({
 
   const score = checks.filter((c) => c.passed).length;
   const healthPercent = Math.round((score / checks.length) * 100);
-
-  // --- DETERMINE HEALTH COLOR ---
-  let healthColor = "bg-red-500";
-  let healthText = "Needs Work";
-  if (healthPercent === 100) {
-    healthColor = "bg-emerald-500";
-    healthText = "Perfect";
-  } else if (healthPercent >= 50) {
-    healthColor = "bg-yellow-500";
-    healthText = "Decent";
-  }
 
   return createPortal(
     <AnimatePresence>

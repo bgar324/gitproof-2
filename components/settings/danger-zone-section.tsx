@@ -38,7 +38,7 @@ export function DangerZoneSection({
             </h4>
             <p className="text-xs text-red-500/60 mt-1">
               Permanently deletes all data, revokes GitHub OAuth, and clears all
-              sessions. You'll start from scratch if you return.
+              sessions. You&apos;ll start from scratch if you return.
             </p>
           </div>
           <button
@@ -62,7 +62,7 @@ export function DangerZoneSection({
               </h5>
               <p className="text-xs text-red-500/80 leading-relaxed">
                 This will permanently delete all your data AND revoke GitHub OAuth
-                authorization. You'll need to re-authorize if you sign up again. Type
+                authorization. You&apos;ll need to re-authorize if you sign up again. Type
                 your username and confirmation phrase to proceed.
               </p>
             </div>

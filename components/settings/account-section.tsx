@@ -1,4 +1,5 @@
 import { RefreshCw, LogOut } from "lucide-react";
+import Image from "next/image";
 import { signOut } from "next-auth/react";
 import { Section } from "./section";
 
@@ -18,7 +19,13 @@ export function AccountSection({ user, isSyncing, onResync }: AccountSectionProp
       <div className="flex items-center gap-4 pb-4 border-b border-border/40 mb-4">
         <div className="w-12 h-12 rounded-full overflow-hidden border border-border bg-secondary">
           {user.image ? (
-            <img src={user.image} alt="Avatar" className="w-full h-full object-cover" />
+            <Image
+              src={user.image}
+              alt="Avatar"
+              width={48}
+              height={48}
+              className="w-full h-full object-cover"
+            />
           ) : (
             <div className="w-full h-full flex items-center justify-center text-muted-foreground text-xs">
               ?

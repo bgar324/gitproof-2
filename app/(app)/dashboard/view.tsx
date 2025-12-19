@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
 import { GitCommit, GitPullRequest, GitFork, Activity } from "lucide-react";
-import { GithubProfile } from "@/lib/github";
+import type { GithubProfile, GithubRepo } from "@/lib/github";
 import { getTimeAgo } from "@/lib/utils";
 import RepoModal from "@/components/repo-modal";
 import { useRouter } from "next/navigation";
@@ -33,7 +33,7 @@ export default function DashboardView({
   const router = useRouter();
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
   const [timeRange, setTimeRange] = useState<"all" | "90d" | "30d">("all");
-  const [selectedRepo, setSelectedRepo] = useState<any>(null);
+  const [selectedRepo, setSelectedRepo] = useState<GithubRepo | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [timeAgo, setTimeAgo] = useState(
     lastSyncedAt ? getTimeAgo(lastSyncedAt) : "never"

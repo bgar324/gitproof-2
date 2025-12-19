@@ -1,6 +1,7 @@
 "use client";
 
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import Image from "next/image";
 import { Cpu, Zap, TrendingUp } from "lucide-react";
 import { DEMO_USER, DEMO_STATS, DEMO_INSIGHTS } from "@/lib/data";
 
@@ -39,9 +40,11 @@ export function DemoReportCard() {
           <div className="relative flex justify-between items-start z-10">
             <div className="flex gap-4 items-center">
               <div className="w-16 h-16 rounded-full border-2 border-background shadow-lg overflow-hidden bg-secondary">
-                <img
+                <Image
                   src={DEMO_USER.image}
                   alt={DEMO_USER.name}
+                  width={64}
+                  height={64}
                   className="w-full h-full object-cover"
                 />
               </div>

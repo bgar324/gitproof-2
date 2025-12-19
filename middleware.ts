@@ -1,9 +1,11 @@
 import { auth } from "@/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 
 // CRITICAL FIX: Centralized route protection
 // Protects all routes under /(app) from unauthenticated access
-export default auth((req: any) => {
+type AuthRequest = NextRequest & { auth?: unknown };
+
+export default auth((req: AuthRequest) => {
   const isAuthenticated = !!req.auth;
   const { pathname } = req.nextUrl;
 

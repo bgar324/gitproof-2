@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Image from "next/image";
 import { Terminal, Zap, ArrowUpRight, Clock, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -90,7 +91,17 @@ export function DashboardHeader({
         </button>
 
         <div className="w-10 h-10 rounded-full overflow-hidden border border-border">
-          <img src={image} alt="Avatar" className="w-full h-full object-cover" />
+          {image ? (
+            <Image
+              src={image}
+              alt="Avatar"
+              width={40}
+              height={40}
+              className="w-full h-full object-cover"
+            />
+          ) : (
+            <div className="w-full h-full bg-secondary" />
+          )}
         </div>
       </motion.div>
     </div>

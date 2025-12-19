@@ -5,7 +5,7 @@ import { ReportCard } from "@/components/report-card";
 import { EditorWorkbench } from "./view";
 import { calculateUserStats, analyzeUserInsights } from "@/lib/stats";
 import Link from "next/link";
-import { TrendingUp, GitCommit, Info, Lock } from "lucide-react";
+import { TrendingUp, Info, Lock } from "lucide-react";
 
 export default async function EditorPage() {
   const session = await auth();

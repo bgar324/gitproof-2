@@ -22,6 +22,9 @@ type UserWithProjects = User & {
   projects: Project[];
 };
 
+const isRecord = (value: unknown): value is Record<string, unknown> =>
+  typeof value === "object" && value !== null;
+
 /**
  * Calculate real user statistics from database data
  */
@@ -41,8 +44,8 @@ export function calculateUserStats(user: UserWithProjects): UserStats {
   // 2. Calculate Total Contributions
   // Try to use real GitHub data first, fallback to calculated
   let totalContributions = 0;
-  if (profileData && typeof profileData === "object" && "totalContributions" in profileData) {
-    totalContributions = (profileData as any).totalContributions || 0;
+  if (isRecord(profileData) && typeof profileData.totalContributions === "number") {
+    totalContributions = profileData.totalContributions;
   } else {
     // Fallback: estimate from projects (stars + forks * 2)
     totalContributions = projects.reduce(
@@ -53,8 +56,8 @@ export function calculateUserStats(user: UserWithProjects): UserStats {
 
   // 3. Calculate Consistency - % of days with commits in last 365 days
   let consistency = 0;
-  if (profileData && typeof profileData === "object" && "heatmap" in profileData) {
-    const heatmap = (profileData as any).heatmap as Array<{ date: string; count: number }>;
+  if (isRecord(profileData) && Array.isArray(profileData.heatmap)) {
+    const heatmap = profileData.heatmap as Array<{ date: string; count: number }>;
     if (Array.isArray(heatmap) && heatmap.length > 0) {
       const activeDays = heatmap.filter((d) => d.count > 0).length;
       consistency = Math.round((activeDays / Math.min(heatmap.length, 365)) * 100);
@@ -130,11 +133,13 @@ export function analyzeUserInsights(
   const growthAreas: Insight[] = [];
 
   // Extract additional data from profileData
-  const profileDataObj = (profileData || {}) as any;
-  const topLanguages = profileDataObj.topLanguages || [];
-  const pullRequests = profileDataObj.pullRequests || 0;
-  const streak = profileDataObj.streak || 0;
-  const heatmap = profileDataObj.heatmap || [];
+  const profileDataObj = isRecord(profileData) ? profileData : {};
+  const pullRequests =
+    typeof profileDataObj.pullRequests === "number"
+      ? profileDataObj.pullRequests
+      : 0;
+  const streak =
+    typeof profileDataObj.streak === "number" ? profileDataObj.streak : 0;
 
   // Analyze languages
   const languageMap = new Map<string, number>();

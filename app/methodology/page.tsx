@@ -1,4 +1,4 @@
-import Link from "next/link";
+/* eslint-disable react/no-unescaped-entities */
 import {
   BookOpen,
   BarChart3,
@@ -131,24 +131,26 @@ export default async function MethodologyPage() {
             <div className="bg-card border border-border rounded-lg p-6 font-mono text-sm my-6">
               <div className="space-y-2">
                 <p className="text-muted-foreground">
-                  // Popularity Component (~40% weight)
+                  {"// Popularity Component (~40% weight)"}
                 </p>
                 <p>popularity = log₂(stars + forks × 2 + 1) × 3</p>
                 <p className="text-muted-foreground mt-4">
-                  // Recency Component (~30% weight)
+                  {"// Recency Component (~30% weight)"}
                 </p>
                 <p>if daysSincePush &lt; 7: recency = 15</p>
                 <p>if daysSincePush &lt; 30: recency = 10</p>
                 <p>if daysSincePush &lt; 90: recency = 5</p>
                 <p>else: recency = 0</p>
                 <p className="text-muted-foreground mt-4">
-                  // Maturity Component (~30% weight)
+                  {"// Maturity Component (~30% weight)"}
                 </p>
                 <p>maturity = 0</p>
                 <p>if description.length &gt; 20: maturity += 5</p>
                 <p>if homepage exists: maturity += 3</p>
                 <p>if topics.length &gt; 0: maturity += 2</p>
-                <p className="text-muted-foreground mt-4">// Final Score</p>
+                <p className="text-muted-foreground mt-4">
+                  {"// Final Score"}
+                </p>
                 <p className="text-primary">
                   score = min(popularity + recency + maturity, 50)
                 </p>

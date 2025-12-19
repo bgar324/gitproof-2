@@ -1,9 +1,12 @@
-import NextAuth from "next-auth"
-import GitHub from "next-auth/providers/github"
-import { db } from "@/lib/db"
+import NextAuth from "next-auth";
+import GitHub from "next-auth/providers/github";
+import { db } from "@/lib/db";
+import type { NextAuthConfig } from "next-auth";
+import type { JWT } from "next-auth/jwt";
 
-// FIX: Cast NextAuth to 'any' to silence the "not callable" error
-export const { handlers, auth, signIn, signOut } = (NextAuth as any)({
+type TokenWithUsername = JWT & { username?: string };
+
+const authConfig: NextAuthConfig = {
   // Use JWT sessions (works in Edge Runtime for middleware)
   // But manually persist User/Account to database in signIn callback
   providers: [
@@ -15,9 +18,12 @@ export const { handlers, auth, signIn, signOut } = (NextAuth as any)({
   ],
   callbacks: {
     // Runs during sign-in (not in Edge Runtime, so Prisma works here)
-    async signIn({ user, account, profile }: any) {
+    async signIn({ user, account, profile }) {
       try {
-        if (!user.email) return false;
+        if (!user?.email) return false;
+
+        const login: string | undefined =
+          profile && typeof profile.login === "string" ? profile.login : undefined;
 
         // Manually create/update User in database
         await db.user.upsert({
@@ -25,13 +31,13 @@ export const { handlers, auth, signIn, signOut } = (NextAuth as any)({
           update: {
             name: user.name,
             image: user.image,
-            username: profile?.login,
+            username: login,
           },
           create: {
             email: user.email,
             name: user.name,
             image: user.image,
-            username: profile?.login,
+            username: login,
           },
         });
 
@@ -56,7 +62,10 @@ export const { handlers, auth, signIn, signOut } = (NextAuth as any)({
                 token_type: account.token_type,
                 scope: account.scope,
                 id_token: account.id_token,
-                session_state: account.session_state,
+                session_state:
+                  typeof account.session_state === "string"
+                    ? account.session_state
+                    : null,
               },
               create: {
                 userId: dbUser.id,
@@ -69,7 +78,10 @@ export const { handlers, auth, signIn, signOut } = (NextAuth as any)({
                 token_type: account.token_type,
                 scope: account.scope,
                 id_token: account.id_token,
-                session_state: account.session_state,
+                session_state:
+                  typeof account.session_state === "string"
+                    ? account.session_state
+                    : null,
               },
             });
           }
@@ -82,18 +94,20 @@ export const { handlers, auth, signIn, signOut } = (NextAuth as any)({
       }
     },
     // JWT callback for JWT sessions
-    async jwt({ token, profile }: any) {
-      if (profile) {
-        token.username = profile.login;
+    async jwt({ token, profile }) {
+      if (profile && typeof profile.login === "string") {
+        (token as TokenWithUsername).username = profile.login;
       }
       return token;
     },
     // Session callback for JWT sessions
-    async session({ session, token }: any) {
+    async session({ session, token }) {
       if (session.user) {
-        session.user.username = token.username;
+        session.user.username = (token as TokenWithUsername).username || "";
       }
       return session;
     },
   },
-})
+};
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig);

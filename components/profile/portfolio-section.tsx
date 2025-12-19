@@ -1,8 +1,9 @@
 import { Code2 } from "lucide-react";
 import { PublicRepoCard } from "./public-repo-card";
+import type { Project } from "@prisma/client";
 
 interface PortfolioSectionProps {
-  projects: any[];
+  projects: Project[];
 }
 
 export function PortfolioSection({ projects }: PortfolioSectionProps) {

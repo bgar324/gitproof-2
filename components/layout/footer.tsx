@@ -2,8 +2,6 @@ import Link from "next/link";
 import { GitGraph } from "lucide-react";
 
 export function Footer() {
-  const currentYear = new Date().getFullYear();
-
   const links = [
     { href: "/methodology", label: "Methodology" },
     { href: "/manifesto", label: "Manifesto" },

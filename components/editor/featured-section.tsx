@@ -1,13 +1,14 @@
 import { Star, Info } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { EditorRepoCard } from "./editor-repo-card";
+import type { ProjectWithPublic } from "./types";
 
 interface FeaturedSectionProps {
-  featuredRepos: any[];
+  featuredRepos: ProjectWithPublic[];
   featuredCount: number;
   descriptionChanges: Map<string, string>;
   rewritingProjectId: string | null;
-  onToggle: (repo: any) => void;
+  onToggle: (repo: ProjectWithPublic) => void;
   onUpdateDesc: (id: string, desc: string) => void;
   onRewrite: (id: string) => void;
 }
@@ -55,7 +56,7 @@ export function FeaturedSection({
               </p>
             </div>
           )}
-          {featuredRepos.map((repo: any) => {
+          {featuredRepos.map((repo) => {
             const currentDescription =
               descriptionChanges.get(repo.id) ||
               repo.aiDescription ||

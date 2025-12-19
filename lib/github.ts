@@ -11,6 +11,30 @@ import {
 const GITHUB_ENDPOINT = "https://api.github.com/graphql";
 
 // --- Types ---
+export interface GithubRepo {
+  id: number;
+  name: string;
+  url: string;
+  homepage: string | null;
+  topics: string[];
+  stars: number;
+  forks: number;
+  score: number;
+  breakdown: {
+    stars: number;
+    forks: number;
+    updatedAt: string;
+  };
+  readme: string;
+  languages: string[];
+  language: string;
+  color: string;
+  desc: string;
+  updated: string;
+  lastPush: string;
+  isPublic: boolean;
+}
+
 export interface GithubProfile {
   username: string;
   image: string;
@@ -21,7 +45,74 @@ export interface GithubProfile {
   topLanguages: { name: string; color: string; percent: number }[];
   hourlyActivity: { time: string; value: number }[];
   heatmap: { date: string; count: number }[];
-  topRepos: any[];
+  topRepos: GithubRepo[];
+}
+
+export interface GithubRepoSummary {
+  id: number;
+  name: string;
+  description: string | null;
+  html_url: string;
+  homepage: string | null;
+  language: string | null;
+  stargazers_count: number;
+  forks_count: number;
+  pushed_at: string;
+  topics: string[];
+  readme: string;
+}
+
+interface GraphQLContributionDay {
+  contributionCount: number;
+  date: string;
+}
+
+interface GraphQLWeek {
+  contributionDays: GraphQLContributionDay[];
+}
+
+interface GraphQLRepoNode {
+  databaseId: number;
+  name: string;
+  description: string | null;
+  url: string;
+  homepageUrl: string | null;
+  stargazerCount: number;
+  forkCount: number;
+  updatedAt: string;
+  visibility: string;
+  languages?: { nodes: Array<{ name: string }> } | null;
+  repositoryTopics?: { nodes: Array<{ topic: { name: string } }> } | null;
+  readmeMd?: { text?: string | null } | null;
+  readmeMD?: { text?: string | null } | null;
+  readmeLower?: { text?: string | null } | null;
+  primaryLanguage?: { name: string; color: string } | null;
+  defaultBranchRef?: {
+    target?: {
+      history?: { nodes?: Array<{ committedDate: string }> };
+    };
+  } | null;
+}
+
+interface GraphQLProfileResponse {
+  viewer: {
+    login: string;
+    name?: string | null;
+    avatarUrl: string;
+    contributionsCollection: {
+      contributionCalendar: {
+        totalContributions: number;
+        weeks: GraphQLWeek[];
+      };
+    };
+    repositories: {
+      totalCount: number;
+      nodes: GraphQLRepoNode[];
+    };
+    pullRequests: {
+      totalCount: number;
+    };
+  };
 }
 
 // --- SHARED QUERY ---
@@ -154,9 +245,10 @@ async function getClient() {
 }
 
 // --- SYNC EXPORTS ---
-export async function fetchGithubProfile(username: string) {
+export async function fetchGithubProfile(_username: string) {
+  void _username;
   const client = await getClient();
-  const data: any = await client.request(PROFILE_QUERY);
+  const data = await client.request<GraphQLProfileResponse>(PROFILE_QUERY);
   return {
     username: data.viewer.login,
     name: data.viewer.name || data.viewer.login,
@@ -164,21 +256,22 @@ export async function fetchGithubProfile(username: string) {
   };
 }
 
-export async function fetchUserRepos(username: string) {
+export async function fetchUserRepos(_username: string): Promise<GithubRepoSummary[]> {
+  void _username;
   const client = await getClient();
-  const data: any = await client.request(PROFILE_QUERY);
+  const data = await client.request<GraphQLProfileResponse>(PROFILE_QUERY);
 
-  return data.viewer.repositories.nodes.map((repo: any) => ({
+  return data.viewer.repositories.nodes.map((repo) => ({
     id: repo.databaseId,
     name: repo.name,
     description: repo.description,
     html_url: repo.url,
     homepage: repo.homepageUrl,
-    language: repo.primaryLanguage?.name,
+    language: repo.primaryLanguage?.name || null,
     stargazers_count: repo.stargazerCount,
     forks_count: repo.forkCount,
     pushed_at: repo.updatedAt,
-    topics: repo.repositoryTopics?.nodes.map((n: any) => n.topic.name) || [],
+    topics: repo.repositoryTopics?.nodes.map((n) => n.topic.name) || [],
     readme:
       repo.readmeMd?.text ||
       repo.readmeMD?.text ||
@@ -187,7 +280,9 @@ export async function fetchUserRepos(username: string) {
   }));
 }
 
-export async function fetchRepoReadme(username: string, repo: string) {
+export async function fetchRepoReadme(_username: string, _repo: string) {
+  void _username;
+  void _repo;
   return "";
 }
 
@@ -200,7 +295,7 @@ export async function getGitProofData(): Promise<GithubProfile | null> {
       const client = await getClient();
 
       try {
-        const data: any = await client.request(PROFILE_QUERY);
+        const data = await client.request<GraphQLProfileResponse>(PROFILE_QUERY);
         const user = data.viewer;
         const repos = user.repositories.nodes;
 
@@ -218,11 +313,11 @@ export async function getGitProofData(): Promise<GithubProfile | null> {
           topLanguages: calculateLanguages(repos),
           hourlyActivity: calculateHourlyActivity(repos),
           heatmap: user.contributionsCollection.contributionCalendar.weeks
-            .flatMap((w: any) => w.contributionDays)
-            .map((d: any) => ({ date: d.date, count: d.contributionCount })),
+            .flatMap((w) => w.contributionDays)
+            .map((d) => ({ date: d.date, count: d.contributionCount })),
           topRepos: getTopRepos(repos),
         };
-      } catch (error: any) {
+      } catch (error: unknown) {
         // CRITICAL FIX: Parse and handle rate limit errors
         const { isRateLimit, resetAt } = parseGitHubError(error);
 
@@ -234,7 +329,7 @@ export async function getGitProofData(): Promise<GithubProfile | null> {
         throw error;
       }
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     // Log error for debugging but don't expose internal details
     console.error("Failed to fetch GitHub data:", error);
 
@@ -248,7 +343,7 @@ export async function getGitProofData(): Promise<GithubProfile | null> {
 }
 
 // --- SCORING ALGORITHM (MATCHING SYNC.TS) ---
-function calculateImpactScore(repo: any) {
+function calculateImpactScore(repo: GraphQLRepoNode) {
   // 1. Popularity
   const stars = repo.stargazerCount;
   const forks = repo.forkCount;
@@ -269,28 +364,28 @@ function calculateImpactScore(repo: any) {
   if (repo.homepageUrl) maturity += 3; // Homepage (called homepageUrl in GraphQL)
 
   // Check for topics safely
-  const hasTopics = repo.repositoryTopics?.nodes?.length > 0;
+  const hasTopics = (repo.repositoryTopics?.nodes?.length ?? 0) > 0;
   if (hasTopics) maturity += 2;
 
   return Math.min(Math.round(popularity + recency + maturity), 50);
 }
 
-function getTopRepos(repos: any[]) {
+function getTopRepos(repos: GraphQLRepoNode[]): GithubRepo[] {
   return (
     repos
-      .map((repo: any) => ({
+      .map((repo) => ({
         ...repo,
         impactScore: calculateImpactScore(repo),
       }))
-      .sort((a: any, b: any) => b.impactScore - a.impactScore)
+      .sort((a, b) => b.impactScore - a.impactScore)
       // .slice(0, 6)
-      .map((repo: any) => ({
+      .map((repo) => ({
         id: repo.databaseId,
         name: repo.name,
         url: repo.url,
         homepage: repo.homepageUrl,
         topics:
-          repo.repositoryTopics?.nodes?.map((n: any) => n.topic.name) || [],
+          repo.repositoryTopics?.nodes?.map((n) => n.topic.name) || [],
         stars: repo.stargazerCount,
         forks: repo.forkCount,
         score: repo.impactScore,
@@ -304,7 +399,7 @@ function getTopRepos(repos: any[]) {
           repo.readmeMD?.text ||
           repo.readmeLower?.text ||
           "",
-        languages: repo.languages?.nodes?.map((n: any) => n.name) || [],
+        languages: repo.languages?.nodes?.map((n) => n.name) || [],
         language: repo.primaryLanguage?.name || "Markdown",
         color: repo.primaryLanguage?.color || "#6e7681",
         desc: repo.description || "",
@@ -319,7 +414,7 @@ function getTopRepos(repos: any[]) {
 }
 
 // --- UTILS (No changes) ---
-function calculateStreak(weeks: any[]): number {
+function calculateStreak(weeks: GraphQLWeek[]): number {
   const days = weeks.flatMap((w) => w.contributionDays).reverse();
   let streak = 0;
   for (const day of days) {
@@ -329,11 +424,11 @@ function calculateStreak(weeks: any[]): number {
   return streak;
 }
 
-function calculateHourlyActivity(repos: any[]) {
+function calculateHourlyActivity(repos: GraphQLRepoNode[]) {
   const hours = new Array(24).fill(0);
-  repos.forEach((repo: any) => {
+  repos.forEach((repo) => {
     const history = repo.defaultBranchRef?.target?.history?.nodes || [];
-    history.forEach((commit: any) => {
+    history.forEach((commit) => {
       const date = new Date(commit.committedDate);
       hours[date.getHours()]++;
     });
@@ -344,10 +439,10 @@ function calculateHourlyActivity(repos: any[]) {
   }));
 }
 
-function calculateLanguages(repos: any[]) {
+function calculateLanguages(repos: GraphQLRepoNode[]) {
   const langMap: Record<string, { count: number; color: string }> = {};
   let totalWithLang = 0;
-  repos.forEach((repo: any) => {
+  repos.forEach((repo) => {
     if (repo.primaryLanguage) {
       const { name, color } = repo.primaryLanguage;
       if (!langMap[name]) langMap[name] = { count: 0, color };

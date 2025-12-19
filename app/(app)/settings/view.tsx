@@ -1,12 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, type Variants } from "framer-motion";
 import { useTheme } from "next-themes";
 import { RefreshCw, Save } from "lucide-react";
 import { signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { triggerSync, deleteUserAccount } from "@/app/actions";
+import type { Session } from "next-auth";
 import {
   AppearanceSection,
   VisibilitySection,
@@ -15,7 +16,16 @@ import {
   DangerZoneSection,
 } from "@/components/settings";
 
-export default function SettingsView({ user, settings }: any) {
+interface SettingsViewProps {
+  user: Session["user"];
+  settings?: {
+    isPublic?: boolean;
+    emailNotifications?: boolean;
+    theme?: string;
+  };
+}
+
+export default function SettingsView({ user, settings }: SettingsViewProps) {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -31,7 +41,8 @@ export default function SettingsView({ user, settings }: any) {
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmUsername, setConfirmUsername] = useState("");
   const [confirmPhrase, setConfirmPhrase] = useState("");
-  const canDelete = confirmUsername === user?.username && confirmPhrase === "Confirm";
+  const username = user?.username || "";
+  const canDelete = confirmUsername === username && confirmPhrase === "Confirm";
 
   useEffect(() => setMounted(true), []);
 
@@ -78,17 +89,25 @@ export default function SettingsView({ user, settings }: any) {
 
   if (!mounted || !user) return null;
 
-  const containerMotion = {
+  const containerMotion: Variants = {
     hidden: { opacity: 0, y: 12 },
     visible: {
       opacity: 1,
       y: 0,
-      transition: { duration: 0.4, ease: "easeOut", staggerChildren: 0.08 },
+      transition: {
+        duration: 0.4,
+        ease: [0.16, 1, 0.3, 1],
+        staggerChildren: 0.08,
+      },
     },
   };
-  const itemMotion = {
+  const itemMotion: Variants = {
     hidden: { opacity: 0, y: 10 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: 0.35, ease: [0.16, 1, 0.3, 1] },
+    },
   };
 
   return (
@@ -129,12 +148,20 @@ export default function SettingsView({ user, settings }: any) {
           <motion.div variants={itemMotion}>
             <VisibilitySection
               isPublic={isPublic}
-              username={user.username}
+              username={username}
               onPublicChange={setIsPublic}
             />
           </motion.div>
           <motion.div variants={itemMotion}>
-            <AccountSection user={user} isSyncing={isSyncing} onResync={handleResync} />
+            <AccountSection
+              user={{
+                name: user.name || undefined,
+                email: user.email || undefined,
+                image: user.image || undefined,
+              }}
+              isSyncing={isSyncing}
+              onResync={handleResync}
+            />
           </motion.div>
           <motion.div variants={itemMotion}>
             <NotificationsSection
@@ -149,7 +176,7 @@ export default function SettingsView({ user, settings }: any) {
               confirmUsername={confirmUsername}
               confirmPhrase={confirmPhrase}
               canDelete={canDelete}
-              username={user.username}
+              username={username}
               onShowDeleteConfirm={setShowDeleteConfirm}
               onConfirmUsernameChange={setConfirmUsername}
               onConfirmPhraseChange={setConfirmPhrase}

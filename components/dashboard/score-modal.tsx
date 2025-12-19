@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useSyncExternalStore } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createPortal } from "react-dom";
 import { Shield, Star, Zap, Code2, X } from "lucide-react";
@@ -11,11 +11,11 @@ interface ScoreModalProps {
 }
 
 export function ScoreModal({ isOpen, onClose }: ScoreModalProps) {
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   // Scroll Lock
   useEffect(() => {
@@ -29,7 +29,7 @@ export function ScoreModal({ isOpen, onClose }: ScoreModalProps) {
     };
   }, [isOpen]);
 
-  if (!mounted) return null;
+  if (!isClient) return null;
 
   return createPortal(
     <AnimatePresence>
@@ -92,7 +92,7 @@ export function ScoreModal({ isOpen, onClose }: ScoreModalProps) {
                         </span>
                       </h3>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
-                        We use a log scale so viral repos don't break the chart.
+                        We use a log scale so viral repos don&apos;t break the chart.
                         <br />
                         <span className="opacity-70">
                           Formula: Forks (2x) + Stars (1x).
@@ -141,7 +141,7 @@ export function ScoreModal({ isOpen, onClose }: ScoreModalProps) {
                       </h3>
                       <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
                         We parse your <code>README.md</code> size and language
-                        complexity to distinguish "Hello World" apps from real
+                        complexity to distinguish &quot;Hello World&quot; apps from real
                         engineering.
                       </p>
                     </div>

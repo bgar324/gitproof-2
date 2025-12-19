@@ -1,22 +1,26 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Sun, Moon, GitGraph, LogOut, LayoutDashboard } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { signIn, signOut } from "next-auth/react";
+import type { Session } from "next-auth";
 interface NavbarProps {
-  session?: any;
+  session?: Session | null;
   variant?: "marketing" | "app";
 }
 
 export function Navbar({ session, variant = "marketing" }: NavbarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const isClient = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  );
 
   const isAuthenticated = !!session?.user;
   const homeHref = isAuthenticated ? "/dashboard" : "/";
@@ -77,7 +81,7 @@ export function Navbar({ session, variant = "marketing" }: NavbarProps) {
             className="relative p-2 rounded-full hover:bg-accent transition-colors"
             aria-label="Toggle theme"
           >
-            {mounted && theme === "dark" ? (
+            {isClient && theme === "dark" ? (
               <Moon size={16} />
             ) : (
               <Sun size={16} />
@@ -100,18 +104,24 @@ export function Navbar({ session, variant = "marketing" }: NavbarProps) {
                 </>
               )}
 
-              {variant === "marketing" && pathname !== "/dashboard" && (
+              {variant === "marketing" && pathname !== "/dashboard" && session.user && (
                 <Link
                   href="/dashboard"
                   className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded-full transition-all"
                 >
-                  <img
-                    src={(session.user as any).image || ""}
-                    alt={(session.user as any).name || "User"}
-                    className="w-6 h-6 rounded-full"
-                  />
+                  {session.user.image ? (
+                    <Image
+                      src={session.user.image}
+                      alt={session.user.name || "User"}
+                      width={24}
+                      height={24}
+                      className="w-6 h-6 rounded-full"
+                    />
+                  ) : (
+                    <div className="w-6 h-6 rounded-full bg-secondary" />
+                  )}
                   <span className="text-sm font-medium text-foreground hidden sm:inline">
-                    @{(session.user as any).username || session.user.name}
+                    @{session.user.username || session.user.name || "user"}
                   </span>
                 </Link>
               )}

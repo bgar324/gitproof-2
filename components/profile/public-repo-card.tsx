@@ -10,13 +10,13 @@ function getScoreColor(score: number) {
 interface PublicRepoCardProps {
   repo: {
     name: string;
-    desc?: string;
-    aiDescription?: string;
+    desc?: string | null;
+    aiDescription?: string | null;
     impactScore: number;
-    isPublic?: boolean;
+    isPublic?: boolean | null;
     url: string;
-    homepage?: string;
-    language?: string;
+    homepage?: string | null;
+    language?: string | null;
     stars: number;
     forks: number;
     lastPush: Date;
@@ -85,7 +85,7 @@ export function PublicRepoCard({ repo }: PublicRepoCardProps) {
 
           {hasHomepage && (
             <a
-              href={repo.homepage}
+              href={repo.homepage || "#"}
               target="_blank"
               rel="noopener noreferrer"
               className="flex-1 inline-flex items-center justify-center gap-2 px-3 py-2 rounded-md bg-primary/10 hover:bg-primary/20 border border-primary/20 text-xs font-medium text-primary transition-colors"

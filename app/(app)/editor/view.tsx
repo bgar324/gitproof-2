@@ -16,10 +16,18 @@ import {
   LibrarySection,
   SaveButton,
 } from "@/components/editor";
+import type { Project, User } from "@prisma/client";
 
 const ITEMS_PER_PAGE = 9;
 
-export function EditorWorkbench({ user, projects = [] }: any) {
+type EditorUser = Pick<User, "username" | "bio" | "isPublic">;
+
+interface EditorWorkbenchProps {
+  user: EditorUser;
+  projects?: Project[];
+}
+
+export function EditorWorkbench({ user, projects = [] }: EditorWorkbenchProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isBioGenerating, setIsBioGenerating] = useState(false);
 
@@ -28,9 +36,9 @@ export function EditorWorkbench({ user, projects = [] }: any) {
   const [isPublic, setIsPublic] = useState(user?.isPublic || false);
 
   const initialFeaturedIds = projects
-    .filter((p: any) => !p.isHidden)
+    .filter((p) => !p.isHidden)
     .slice(0, 6)
-    .map((p: any) => p.id) as string[];
+    .map((p) => p.id) as string[];
 
   const [featuredIds, setFeaturedIds] = useState<string[]>(initialFeaturedIds);
   const [descriptionChanges, setDescriptionChanges] = useState<Map<string, string>>(
@@ -40,7 +48,7 @@ export function EditorWorkbench({ user, projects = [] }: any) {
   const [searchTerm, setSearchTerm] = useState("");
   const [libraryPage, setLibraryPage] = useState(1);
 
-  const handleToggleRepo = (repo: any) => {
+  const handleToggleRepo = (repo: Project) => {
     if (featuredIds.includes(repo.id)) {
       setFeaturedIds((prev) => prev.filter((id: string) => id !== repo.id));
     } else {
@@ -113,7 +121,7 @@ export function EditorWorkbench({ user, projects = [] }: any) {
           await updateUserBio(bio);
         }
 
-        const allProjectIds = projects.map((p: any) => p.id) as string[];
+        const allProjectIds = projects.map((p) => p.id) as string[];
         const hiddenProjectIds = allProjectIds.filter(
           (id) => !featuredIds.includes(id)
         );
@@ -148,15 +156,15 @@ export function EditorWorkbench({ user, projects = [] }: any) {
   };
 
   const featuredRepos = useMemo(
-    () => projects.filter((p: any) => featuredIds.includes(p.id)),
+    () => projects.filter((p) => featuredIds.includes(p.id)),
     [projects, featuredIds]
   );
 
   const availableRepos = useMemo(
     () =>
       projects
-        .filter((p: any) => !featuredIds.includes(p.id))
-        .filter((p: any) => p.name.toLowerCase().includes(searchTerm.toLowerCase())),
+        .filter((p) => !featuredIds.includes(p.id))
+        .filter((p) => p.name.toLowerCase().includes(searchTerm.toLowerCase())),
     [projects, featuredIds, searchTerm]
   );
 
@@ -174,7 +182,7 @@ export function EditorWorkbench({ user, projects = [] }: any) {
     <div className="w-full h-full space-y-12 pb-32">
       <div className="max-w-6xl mx-auto px-6 space-y-12">
         <IdentitySection
-          username={user.username}
+          username={user.username || "unknown"}
           isPublic={isPublic}
           bio={bio}
           isBioGenerating={isBioGenerating}

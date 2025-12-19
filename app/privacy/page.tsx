@@ -1,3 +1,4 @@
+/* eslint-disable react/no-unescaped-entities */
 import Link from "next/link";
 import { Shield, CheckCircle2, Lock, Eye, Database, UserX } from "lucide-react";
 import { auth } from "@/auth";

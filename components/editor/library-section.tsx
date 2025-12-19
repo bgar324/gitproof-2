@@ -1,16 +1,17 @@
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
 import { EditorRepoCard } from "./editor-repo-card";
+import type { ProjectWithPublic } from "./types";
 
 interface LibrarySectionProps {
-  availableRepos: any[];
-  paginatedRepos: any[];
+  availableRepos: ProjectWithPublic[];
+  paginatedRepos: ProjectWithPublic[];
   totalProjects: number;
   searchTerm: string;
   libraryPage: number;
   totalPages: number;
   onSearchChange: (term: string) => void;
   onPageChange: (page: number) => void;
-  onToggle: (repo: any) => void;
+  onToggle: (repo: ProjectWithPublic) => void;
 }
 
 export function LibrarySection({
@@ -51,7 +52,7 @@ export function LibrarySection({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 opacity-90 hover:opacity-100 transition-opacity">
-        {paginatedRepos.map((repo: any) => (
+        {paginatedRepos.map((repo) => (
           <EditorRepoCard
             key={repo.id}
             repo={repo}

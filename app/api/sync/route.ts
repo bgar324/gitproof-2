@@ -2,6 +2,20 @@ import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
 import { sanitizeString, sanitizeStringArray, sanitizeForPostgres } from "@/lib/sanitize";
+import type { Prisma } from "@prisma/client";
+import type { GithubProfile, GithubRepo } from "@/lib/github";
+
+interface SyncPayload {
+  heatmap: GithubProfile["heatmap"];
+  totalContributions: number;
+  pullRequests: number;
+  repoCount: number;
+  streak: number;
+  topLanguages: GithubProfile["topLanguages"];
+  topRepos: GithubRepo[];
+  username: string;
+  hourlyActivity: GithubProfile["hourlyActivity"];
+}
 
 export async function POST(req: Request) {
   // 1. Authenticate (Security Check)
@@ -11,7 +25,7 @@ export async function POST(req: Request) {
   }
 
   try {
-    const data = await req.json();
+    const data = (await req.json()) as SyncPayload;
     const { 
       heatmap, 
       totalContributions, 
@@ -39,7 +53,7 @@ export async function POST(req: Request) {
           streak,
           topLanguages,
           hourlyActivity: data.hourlyActivity
-        }) as any,
+        }) as Prisma.InputJsonValue,
       },
     });
 

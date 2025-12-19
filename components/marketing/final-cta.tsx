@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import { PenTool, Github } from "lucide-react";
+import type { Session } from "next-auth";
 
 interface FinalCTAProps {
-  session?: any;
+  session?: Session | null;
 }
 
 export function FinalCTA({ session }: FinalCTAProps) {

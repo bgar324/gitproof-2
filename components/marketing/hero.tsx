@@ -13,9 +13,10 @@ import {
   Trophy,
 } from "lucide-react";
 import { DemoReportCard } from "./demo-report-card";
+import type { Session } from "next-auth";
 
 interface HeroProps {
-  session?: any;
+  session?: Session | null;
 }
 
 export function Hero({ session }: HeroProps) {
@@ -59,7 +60,7 @@ export function Hero({ session }: HeroProps) {
             transition={{ delay: 0.2 }}
             className="text-xl text-muted-foreground/90 font-light leading-relaxed max-w-2xl mx-auto lg:mx-0"
           >
-            Stop telling recruiters you're "passionate."{" "}
+            Stop telling recruiters you&apos;re &quot;passionate.&quot;{" "}
             <span className="text-foreground font-medium">Prove it.</span>{" "}
             GitProof analyzes your GitHub history to generate a verified,
             data-driven report card that speaks for itself.
