@@ -49,7 +49,7 @@ export function Hero({ session }: HeroProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="font-serif text-6xl md:text-7xl lg:text-8xl font-bold tracking-tight text-foreground leading-[1]"
+            className="font-serif text-6xl md:text-7xl lg:text-8xl tracking-tight text-foreground leading-[1]"
           >
             Your Code, <br />
             Verified.
@@ -61,10 +61,12 @@ export function Hero({ session }: HeroProps) {
             transition={{ delay: 0.2 }}
             className="text-xl text-muted-foreground/90 font-light leading-relaxed max-w-2xl mx-auto lg:mx-0"
           >
-            Stop telling recruiters you&apos;re &quot;passionate.&quot;{" "}
-            <span className="text-foreground font-medium">Prove it.</span>{" "}
-            GitProof analyzes your GitHub history to generate a verified,
-            data-driven report card that speaks for itself.
+            A clearer way to represent your work.
+            <span className="text-foreground font-medium">
+              {" "}Backed by real data.{" "}
+            </span>
+            GitProof analyzes GitHub activity to produce an objective report on
+            project impact, recency, and depth.
           </motion.p>
 
           <motion.div
