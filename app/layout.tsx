@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "GitProof | Recruiter-Ready GitHub Reports",
   description: "Transform your GitHub activity into professional, data-driven PDF reports for job applications.",
   icons: {
-    icon: "static/favicon.svg", // Ensure you have a favicon
+    icon: "/static/favicon.svg",
   },
 };
 
