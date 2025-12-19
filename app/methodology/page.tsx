@@ -40,7 +40,7 @@ export default async function MethodologyPage() {
           <div className="flex items-center gap-4 text-sm text-muted-foreground pt-4 border-t border-border/50">
             <span>Last Updated: December 2025</span>
             <span>•</span>
-            <span>Version 1.0</span>
+            <span>Version 1.1</span>
           </div>
         </div>
 

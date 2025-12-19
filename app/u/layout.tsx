@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { GitGraph } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { Footer } from "@/components/layout";
 
 export default function PublicLayout({
   children,
@@ -59,9 +60,7 @@ export default function PublicLayout({
 
       <main className="flex-1">{children}</main>
 
-      <footer className="py-8 text-center text-xs text-muted-foreground border-t border-border/40">
-        <p>© {new Date().getFullYear()} GitProof. Verified Developer Data.</p>
-      </footer>
+      <Footer />
     </div>
   );
 }
