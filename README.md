@@ -149,7 +149,7 @@ GitProof 2 is a full-stack Next.js application that helps developers:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/gitproof-2.git
+   git clone https://github.com/bgar324/gitproof-2
    cd gitproof-2
    ```
 
