@@ -36,7 +36,7 @@ export function RepoReadmeViewer({ readme, repoUrl }: RepoReadmeViewerProps) {
           <button
             onClick={() => setViewMode("preview")}
             className={cn(
-              "h-full px-4 text-xs font-medium border-t-2 border-b-2 border-transparent flex items-center gap-2 transition-colors",
+              "h-full px-4 text-xs font-medium border-t-2 border-b-2 border-transparent flex items-center gap-2 transition-colors hover:cursor-pointer",
               viewMode === "preview"
                 ? "bg-[#0d1117] text-zinc-100 border-t-[#f78166] border-b-[#0d1117]"
                 : "text-zinc-500 hover:text-zinc-300 hover:bg-[#0d1117]/50"
@@ -47,7 +47,7 @@ export function RepoReadmeViewer({ readme, repoUrl }: RepoReadmeViewerProps) {
           <button
             onClick={() => setViewMode("raw")}
             className={cn(
-              "h-full px-4 text-xs font-medium border-t-2 border-b-2 border-transparent flex items-center gap-2 transition-colors",
+              "h-full px-4 text-xs font-medium border-t-2 border-b-2 border-transparent flex items-center gap-2 transition-colors hover:cursor-pointer",
               viewMode === "raw"
                 ? "bg-[#0d1117] text-zinc-100 border-t-[#f78166] border-b-[#0d1117]"
                 : "text-zinc-500 hover:text-zinc-300 hover:bg-[#0d1117]/50"
@@ -61,7 +61,7 @@ export function RepoReadmeViewer({ readme, repoUrl }: RepoReadmeViewerProps) {
           <a
             href={`${repoUrl}/blame/HEAD/README.md`}
             target="_blank"
-            className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1.5 transition-colors"
+            className="text-[10px] text-zinc-500 hover:text-zinc-300 flex items-center gap-1.5 transition-colors hover:cursor-pointer"
             rel="noopener noreferrer"
           >
             <GitCommit size={12} /> Blame
@@ -69,7 +69,7 @@ export function RepoReadmeViewer({ readme, repoUrl }: RepoReadmeViewerProps) {
           {readme && (
             <button
               onClick={handleCopy}
-              className="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors"
+              className="text-[10px] text-zinc-400 hover:text-white flex items-center gap-1.5 transition-colors hover:cursor-pointer"
             >
               {copied ? (
                 <Check size={12} className="text-emerald-500" />

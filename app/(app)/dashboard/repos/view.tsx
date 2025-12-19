@@ -155,19 +155,19 @@ export default function ReposView({
             <div className="flex bg-card border border-border rounded-lg p-1 h-10">
                <button 
                   onClick={() => setSortMode("impact")}
-                  className={cn("px-3 text-xs font-medium rounded-md transition-all", sortMode === "impact" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground")}
+                  className={cn("px-3 text-xs font-medium rounded-md transition-all hover:cursor-pointer", sortMode === "impact" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground")}
                >
                  Impact
                </button>
                <button 
                   onClick={() => setSortMode("recent")}
-                  className={cn("px-3 text-xs font-medium rounded-md transition-all", sortMode === "recent" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground")}
+                  className={cn("px-3 text-xs font-medium rounded-md transition-all hover:cursor-pointer", sortMode === "recent" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground")}
                >
                  Recent
                </button>
                <button 
                   onClick={() => setSortMode("stars")}
-                  className={cn("px-3 text-xs font-medium rounded-md transition-all", sortMode === "stars" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground")}
+                  className={cn("px-3 text-xs font-medium rounded-md transition-all hover:cursor-pointer", sortMode === "stars" ? "bg-secondary text-foreground" : "text-muted-foreground hover:text-foreground")}
                >
                  Stars
                </button>

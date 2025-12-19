@@ -1,5 +1,11 @@
 import { Star, Info } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { EditorRepoCard } from "./editor-repo-card";
 import type { ProjectWithPublic } from "./types";
 
@@ -27,19 +33,32 @@ export function FeaturedSection({
       <div className="flex flex-col gap-2">
         <div className="flex justify-between items-end px-1">
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2">
-            <Star size={12} className="text-amber-500" /> Featured
+            <Star size={12} className="text-amber-500" />
+            Featured
+            <TooltipProvider delayDuration={150}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    className="p-0.5 rounded hover:bg-secondary transition-colors"
+                    aria-label="Featured description info"
+                  >
+                    <Info size={12} className="text-muted-foreground" />
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent
+                  side="top"
+                  align="center"
+                  className="max-w-md text-xs"
+                >
+                  Editing descriptions here only affects your GitProof profile.
+                  GitHub repository descriptions are not modified.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           </h3>
+
           <span className="text-[10px] font-mono text-muted-foreground bg-secondary px-2 py-0.5 rounded">
             {featuredCount} / 6
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2 px-3 py-2 bg-blue-500/5 border border-blue-500/10 rounded-lg text-xs text-blue-600/80">
-          <Info size={14} className="shrink-0" />
-          <span>
-            Rewriting descriptions here updates your{" "}
-            <strong>GitProof Profile</strong> only. Your GitHub READMEs remain
-            untouched.
           </span>
         </div>
       </div>
@@ -56,17 +75,19 @@ export function FeaturedSection({
               </p>
             </div>
           )}
+
           {featuredRepos.map((repo) => {
             const currentDescription =
               descriptionChanges.get(repo.id) ||
               repo.aiDescription ||
               repo.desc ||
               "";
+
             return (
               <EditorRepoCard
                 key={repo.id}
                 repo={repo}
-                isSelected={true}
+                isSelected
                 onToggle={onToggle}
                 onUpdateDesc={onUpdateDesc}
                 onRewrite={onRewrite}

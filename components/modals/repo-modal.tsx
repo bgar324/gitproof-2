@@ -73,7 +73,7 @@ export default function RepoModal({ repo, isOpen, onClose }: RepoModalProps) {
               >
                 <ExternalLink size={12} /> GitHub
               </a>
-              <DialogPrimitive.Close className="p-2 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground">
+              <DialogPrimitive.Close className="p-2 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground hover:cursor-pointer">
                 <X size={16} />
                 <span className="sr-only">Close</span>
               </DialogPrimitive.Close>

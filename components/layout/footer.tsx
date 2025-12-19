@@ -62,7 +62,7 @@ export function Footer() {
 
         {/* Right: Personal Credit */}
         <div className="text-xs text-muted-foreground/70">
-          <p>
+          <p className="hover:text-foreground transition-colors">
             Built by{" "}
             <a
               href="https://bentgarcia.com"

@@ -67,7 +67,9 @@ export function EditorRepoCard({
                   {repo.name}
                 </h4>
                 <div className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-secondary text-muted-foreground border border-border shrink-0">
-                  <span className={cn("font-bold", getScoreColor(repo.impactScore))}>
+                  <span
+                    className={cn("font-bold", getScoreColor(repo.impactScore))}
+                  >
                     {repo.impactScore}
                   </span>
                   /50

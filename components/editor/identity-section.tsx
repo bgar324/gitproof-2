@@ -73,7 +73,7 @@ export function IdentitySection({
             <button
               onClick={onGenerateBio}
               disabled={isBioGenerating}
-              className="text-xs bg-primary/5 text-primary border border-primary/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-primary/10 transition-colors disabled:opacity-70 disabled:cursor-wait"
+              className="text-xs bg-primary/5 text-primary border border-primary/20 px-3 py-1.5 rounded-lg flex items-center gap-1.5 hover:bg-primary/10 transition-colors disabled:opacity-70 disabled:cursor-wait hover:cursor-pointer"
             >
               {isBioGenerating ? (
                 <Loader2 size={12} className="animate-spin" />

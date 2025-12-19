@@ -48,19 +48,22 @@ export function calculateUserStats(user: UserWithProjects): UserStats {
 
     // Weighted formula: emphasizes top projects more than average
     impactScore = Math.round(
-      top1 * 0.50 +     // Best project = 50%
-      top2 * 0.125 +    // 2nd best = 12.5%
-      top3 * 0.125 +    // 3rd best = 12.5%
-      top4 * 0.083 +    // 4th best = 8.33%
-      top5 * 0.083 +    // 5th best = 8.33%
-      top6 * 0.083      // 6th best = 8.33%
+      top1 * 0.5 + // Best project = 50%
+        top2 * 0.125 + // 2nd best = 12.5%
+        top3 * 0.125 + // 3rd best = 12.5%
+        top4 * 0.083 + // 4th best = 8.33%
+        top5 * 0.083 + // 5th best = 8.33%
+        top6 * 0.083 // 6th best = 8.33%
     );
   }
 
   // 2. Calculate Total Contributions
   // Try to use real GitHub data first, fallback to calculated
   let totalContributions = 0;
-  if (isRecord(profileData) && typeof profileData.totalContributions === "number") {
+  if (
+    isRecord(profileData) &&
+    typeof profileData.totalContributions === "number"
+  ) {
     totalContributions = profileData.totalContributions;
   } else {
     // Fallback: estimate from projects (stars + forks * 2)
@@ -73,10 +76,15 @@ export function calculateUserStats(user: UserWithProjects): UserStats {
   // 3. Calculate Consistency - % of days with commits in last 365 days
   let consistency = 0;
   if (isRecord(profileData) && Array.isArray(profileData.heatmap)) {
-    const heatmap = profileData.heatmap as Array<{ date: string; count: number }>;
+    const heatmap = profileData.heatmap as Array<{
+      date: string;
+      count: number;
+    }>;
     if (Array.isArray(heatmap) && heatmap.length > 0) {
       const activeDays = heatmap.filter((d) => d.count > 0).length;
-      consistency = Math.round((activeDays / Math.min(heatmap.length, 365)) * 100);
+      consistency = Math.round(
+        (activeDays / Math.min(heatmap.length, 365)) * 100
+      );
     }
   }
 
@@ -94,43 +102,73 @@ export function calculateUserStats(user: UserWithProjects): UserStats {
 /**
  * Calculate the user's top technologies based on their projects
  */
+const TECH_ALIASES: Record<string, string> = {
+  tailwindcss: "TAILWIND CSS",
+  nextjs: "NEXT.JS",
+  reactjs: "REACT",
+  nodejs: "NODE.JS",
+  javascript: "JAVASCRIPT",
+  typescript: "TYPESCRIPT",
+  cpp: "C++",
+  cplusplus: "C++",
+};
+
+function normalizeTechKey(input: string): string {
+  return input
+    .toLowerCase()
+    .replace(/[^a-z0-9]/g, "")
+    .trim();
+}
+
+function formatDisplayNameUpper(input: string): string {
+  const key = normalizeTechKey(input);
+
+  if (TECH_ALIASES[key]) {
+    return TECH_ALIASES[key];
+  }
+
+  // Fallback: split words, join, and force uppercase
+  return input
+    .split(/[\s-]+/)
+    .join(" ")
+    .toUpperCase();
+}
+
 export function calculateTopTechnologies(
   user: UserWithProjects,
   limit: number = 5
 ): string[] {
-  const projects = user.projects || [];
+  const projects = user.projects ?? [];
   const techFrequency = new Map<string, { display: string; count: number }>();
 
   const addTech = (tech: string, weight: number) => {
-    const key = tech.toLowerCase();
+    const key = normalizeTechKey(tech);
+    if (!key) return;
+
     const existing = techFrequency.get(key);
     if (existing) {
       existing.count += weight;
-    } else {
-      // Normalize display name: split by hyphens, uppercase each word
-      const display = tech
-        .split(/[-\s]+/)
-        .map((word) => word.toUpperCase())
-        .join(" ");
-      techFrequency.set(key, { display, count: weight });
+      return;
     }
+
+    techFrequency.set(key, {
+      display: formatDisplayNameUpper(tech),
+      count: weight,
+    });
   };
 
-  projects.forEach((project) => {
-    // Count primary language (weighted 3x higher)
+  for (const project of projects) {
     if (project.language) {
       addTech(project.language, 3);
     }
 
-    // Count topics/tags (weighted 1x)
-    if (project.topics && Array.isArray(project.topics)) {
-      project.topics.forEach((topic: string) => {
+    if (Array.isArray(project.topics)) {
+      for (const topic of project.topics) {
         addTech(topic, 1);
-      });
+      }
     }
-  });
+  }
 
-  // Sort by frequency and return top N
   return Array.from(techFrequency.values())
     .sort((a, b) => b.count - a.count)
     .slice(0, limit)
@@ -164,7 +202,9 @@ export function analyzeUserInsights(
       languageMap.set(p.language, (languageMap.get(p.language) || 0) + 1);
     }
   });
-  const languages = Array.from(languageMap.entries()).sort((a, b) => b[1] - a[1]);
+  const languages = Array.from(languageMap.entries()).sort(
+    (a, b) => b[1] - a[1]
+  );
   const primaryLanguage = languages[0]?.[0];
 
   // Analyze project maturity
@@ -174,15 +214,18 @@ export function analyzeUserInsights(
       p.homepage ||
       (p.topics && p.topics.length > 0)
   );
-  const maturityRate = projects.length > 0 ? matureProjects.length / projects.length : 0;
+  const maturityRate =
+    projects.length > 0 ? matureProjects.length / projects.length : 0;
 
   // Analyze activity patterns
   const recentProjects = projects.filter((p) => {
-    const daysSince = (Date.now() - new Date(p.lastPush).getTime()) / (1000 * 60 * 60 * 24);
+    const daysSince =
+      (Date.now() - new Date(p.lastPush).getTime()) / (1000 * 60 * 60 * 24);
     return daysSince < 30;
   });
   const veryRecentProjects = projects.filter((p) => {
-    const daysSince = (Date.now() - new Date(p.lastPush).getTime()) / (1000 * 60 * 60 * 24);
+    const daysSince =
+      (Date.now() - new Date(p.lastPush).getTime()) / (1000 * 60 * 60 * 24);
     return daysSince < 7;
   });
 
@@ -191,8 +234,11 @@ export function analyzeUserInsights(
   const highImpactProjects = projects.filter((p) => p.impactScore >= 30);
 
   // Calculate documentation rate
-  const documentedProjects = projects.filter((p) => p.readme && p.readme.length > 500);
-  const documentationRate = projects.length > 0 ? documentedProjects.length / projects.length : 0;
+  const documentedProjects = projects.filter(
+    (p) => p.readme && p.readme.length > 500
+  );
+  const documentationRate =
+    projects.length > 0 ? documentedProjects.length / projects.length : 0;
 
   // ======================
   // STRENGTHS DETECTION
