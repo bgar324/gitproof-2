@@ -14,15 +14,15 @@ export function StatBox({
   subColor = "text-muted-foreground",
 }: StatBoxProps) {
   return (
-    <div className="flex flex-col items-center justify-center p-4 hover:bg-white/[0.02] transition-colors group">
-      <span className="font-serif text-2xl text-foreground font-medium tracking-tight group-hover:scale-105 transition-transform">
+    <div className="flex flex-col items-center justify-center p-3 sm:p-4 hover:bg-white/[0.02] transition-colors group">
+      <span className="font-serif text-xl sm:text-2xl text-foreground font-medium tracking-tight group-hover:scale-105 transition-transform">
         {value}
       </span>
-      <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-medium mt-1">
+      <span className="text-[9px] sm:text-[10px] uppercase tracking-widest text-muted-foreground font-medium mt-1">
         {label}
       </span>
       {sub && (
-        <span className={cn("text-[10px] font-mono mt-0.5", subColor)}>
+        <span className={cn("text-[9px] sm:text-[10px] font-mono mt-0.5", subColor)}>
           {sub}
         </span>
       )}

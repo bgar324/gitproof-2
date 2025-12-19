@@ -43,11 +43,11 @@ export function ReportHeader({
   grade,
 }: ReportHeaderProps) {
   return (
-    <div className="relative p-6 pb-8 border-b border-border bg-muted/5">
-      <div className="relative flex justify-between items-start z-10">
-        <div className="flex gap-5 items-center">
+    <div className="relative p-4 pb-6 sm:p-6 sm:pb-8 border-b border-border bg-muted/5">
+      <div className="relative flex justify-between items-start gap-3 sm:gap-4 z-10">
+        <div className="flex gap-3 sm:gap-5 items-center min-w-0 flex-1">
           {/* Avatar (Clean, no overlap) */}
-          <div className="w-20 h-20 rounded-full border-2 border-background shadow-lg overflow-hidden bg-secondary">
+          <div className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-2 border-background shadow-lg overflow-hidden bg-secondary flex-shrink-0">
             {image ? (
               <Image
                 src={image}
@@ -62,11 +62,11 @@ export function ReportHeader({
           </div>
 
           {/* Identity */}
-          <div>
-            <h2 className="text-2xl font-serif font-bold tracking-tight text-foreground mb-1">
+          <div className="min-w-0 flex-1">
+            <h2 className="text-lg sm:text-2xl font-serif font-bold tracking-tight text-foreground mb-0.5 sm:mb-1 truncate">
               {name}
             </h2>
-            <p className="text-sm text-muted-foreground font-mono mb-3">
+            <p className="text-xs sm:text-sm text-muted-foreground font-mono mb-2 sm:mb-3 truncate">
               @{username || "user"}
             </p>
 
@@ -80,10 +80,10 @@ export function ReportHeader({
         </div>
 
         {/* Grade Badge */}
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col items-center flex-shrink-0">
           <div
             className={cn(
-              "w-16 h-16 flex items-center justify-center text-white font-serif text-4xl font-bold rounded-xl shadow-lg relative overflow-hidden transition-colors",
+              "w-12 h-12 sm:w-16 sm:h-16 flex items-center justify-center text-white font-serif text-3xl sm:text-4xl font-bold rounded-xl shadow-lg relative overflow-hidden transition-colors",
               grade.bg,
               grade.shadow
             )}
@@ -92,7 +92,7 @@ export function ReportHeader({
             {/* Shine effect */}
             <div className="absolute top-0 right-0 -mr-4 -mt-4 w-12 h-12 bg-white/20 blur-xl rounded-full" />
           </div>
-          <span className="text-[10px] font-mono text-muted-foreground mt-2 uppercase tracking-widest">
+          <span className="text-[9px] sm:text-[10px] font-mono text-muted-foreground mt-1.5 sm:mt-2 uppercase tracking-widest">
             Grade
           </span>
         </div>
