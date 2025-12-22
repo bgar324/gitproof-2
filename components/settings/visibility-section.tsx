@@ -25,7 +25,7 @@ export function VisibilitySection({
             className="p-3 bg-secondary/30 rounded-lg border border-border flex items-center justify-between text-xs"
           >
             <span className="text-muted-foreground truncate">
-              gitproof-2.vercel.app/u/{username || "username"}
+              gitproof.dev/u/{username || "username"}
             </span>
             <a
               href={`/u/${username}`}
