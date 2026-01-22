@@ -30,7 +30,7 @@ export function HeroSection({ user, stats, insights, topTech }: HeroSectionProps
 
             <p className="text-lg text-muted-foreground/90 leading-relaxed border-l-2 border-border pl-4">
               {user.bio ||
-                "Full-stack engineer building scalable systems. Verified by GitProof analysis."}
+                "User has not provided a biography."}
             </p>
 
             <Link

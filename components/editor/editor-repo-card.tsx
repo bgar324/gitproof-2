@@ -10,6 +10,7 @@ import {
   Calendar,
   Lock,
   Globe,
+  FileText,
 } from "lucide-react";
 import { cn, formatDate, getScoreColor } from "@/lib/utils";
 import { getLanguageColor } from "@/lib/language-colors";
@@ -21,6 +22,7 @@ interface EditorRepoCardProps {
   onToggle: (repo: ProjectWithPublic) => void;
   onUpdateDesc: (id: string, newDesc: string) => void;
   onRewrite: (id: string) => void;
+  onGenerateReadme: (repo: ProjectWithPublic) => void;
   isRewriting: boolean;
   currentDescription: string;
 }
@@ -31,6 +33,7 @@ export function EditorRepoCard({
   onToggle,
   onUpdateDesc,
   onRewrite,
+  onGenerateReadme,
   isRewriting,
   currentDescription,
 }: EditorRepoCardProps) {
@@ -148,18 +151,27 @@ export function EditorRepoCard({
                 <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
                   Description
                 </span>
-                <button
-                  onClick={() => onRewrite(repo.id)}
-                  disabled={isRewriting}
-                  className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 border border-primary/20 text-[10px] font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-70 disabled:cursor-wait hover:cursor-pointer"
-                >
-                  {isRewriting ? (
-                    <Loader2 size={10} className="animate-spin" />
-                  ) : (
-                    <Sparkles size={10} />
-                  )}
-                  Rewrite
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onGenerateReadme(repo)}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/50 border border-border text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors hover:cursor-pointer"
+                  >
+                    <FileText size={10} />
+                    README
+                  </button>
+                  <button
+                    onClick={() => onRewrite(repo.id)}
+                    disabled={isRewriting}
+                    className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-primary/5 border border-primary/20 text-[10px] font-medium text-primary hover:bg-primary/10 transition-colors disabled:opacity-70 disabled:cursor-wait hover:cursor-pointer"
+                  >
+                    {isRewriting ? (
+                      <Loader2 size={10} className="animate-spin" />
+                    ) : (
+                      <Sparkles size={10} />
+                    )}
+                    Rewrite
+                  </button>
+                </div>
               </div>
               <textarea
                 className="w-full bg-secondary/30 hover:bg-secondary/50 focus:bg-background border border-transparent focus:border-primary/30 rounded-lg p-3 text-xs leading-relaxed resize-none outline-none transition-all placeholder:text-muted-foreground/50 font-mono disabled:opacity-70"

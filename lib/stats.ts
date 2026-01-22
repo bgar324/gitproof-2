@@ -522,7 +522,7 @@ export function analyzeUserInsights(
   // Fallbacks if no insights detected
   if (topStrengths.length === 0) {
     topStrengths.push({
-      text: "Active GitHub presence",
+      text: "No insights detected",
       strength: "medium",
     });
   }

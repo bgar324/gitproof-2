@@ -83,7 +83,12 @@ export default function RepoModal({ repo, isOpen, onClose }: RepoModalProps) {
           {/* Body */}
           <div className="flex-1 overflow-hidden flex flex-col md:flex-row">
             <RepoHealthSidebar checks={checks} />
-            <RepoReadmeViewer readme={repo.readme} repoUrl={repo.url} />
+            <RepoReadmeViewer
+              readme={repo.readme}
+              repoUrl={repo.url}
+              githubId={repo.id}
+              repoName={repo.name}
+            />
           </div>
         </DialogPrimitive.Content>
       </DialogPortal>

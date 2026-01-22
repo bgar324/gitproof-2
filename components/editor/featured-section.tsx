@@ -17,6 +17,7 @@ interface FeaturedSectionProps {
   onToggle: (repo: ProjectWithPublic) => void;
   onUpdateDesc: (id: string, desc: string) => void;
   onRewrite: (id: string) => void;
+  onGenerateReadme: (repo: ProjectWithPublic) => void;
 }
 
 export function FeaturedSection({
@@ -27,6 +28,7 @@ export function FeaturedSection({
   onToggle,
   onUpdateDesc,
   onRewrite,
+  onGenerateReadme,
 }: FeaturedSectionProps) {
   return (
     <div className="space-y-6">
@@ -91,6 +93,7 @@ export function FeaturedSection({
                 onToggle={onToggle}
                 onUpdateDesc={onUpdateDesc}
                 onRewrite={onRewrite}
+                onGenerateReadme={onGenerateReadme}
                 isRewriting={rewritingProjectId === repo.id}
                 currentDescription={currentDescription}
               />

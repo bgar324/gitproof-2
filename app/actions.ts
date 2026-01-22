@@ -8,6 +8,12 @@ import { auth } from "@/auth";
 import { revalidatePath } from "next/cache";
 import { syncUserData } from "@/lib/sync";
 import { sanitizeString, sanitizeForPostgres } from "@/lib/sanitize";
+import {
+  fetchRepoContext,
+  detectPackageManager,
+  extractNpmScripts,
+  extractDependenciesSummary,
+} from "@/lib/readme";
 
 const google = createGoogleGenerativeAI({
   apiKey: process.env.GOOGLE_GENERATIVE_AI_API_KEY,
@@ -23,7 +29,7 @@ export async function triggerSync() {
   await syncUserData(
     session.user.username,
     session.user.email,
-    session.user.image || ""
+    session.user.image || "",
   );
 
   // 2. Also fetch and cache fresh stats from GitHub
@@ -52,7 +58,7 @@ export async function generateRecruiterDescription(
   repoName: string,
   rawDesc: string,
   tags: string[],
-  readme: string
+  readme: string,
 ) {
   const session = await auth();
   if (!session?.user?.email) throw new Error("Not authenticated");
@@ -207,7 +213,7 @@ export async function generateUserBio() {
       (p) =>
         `- ${p.name}: ${p.desc || "No description"} (${
           p.stars
-        } stars, Impact: ${p.impactScore}/50)`
+        } stars, Impact: ${p.impactScore}/50)`,
     )
     .join("\n");
 
@@ -243,7 +249,7 @@ Output ONLY the bio text, nothing else.`,
 
 export async function updateProjectVisibility(
   projectId: string,
-  isHidden: boolean
+  isHidden: boolean,
 ) {
   const session = await auth();
   if (!session?.user?.email) throw new Error("Not authenticated");
@@ -273,7 +279,7 @@ export async function updateProjectVisibility(
 
 export async function batchUpdateProjectVisibility(
   hiddenProjectIds: string[],
-  visibleProjectIds: string[]
+  visibleProjectIds: string[],
 ) {
   const session = await auth();
   if (!session?.user?.email) throw new Error("Not authenticated");
@@ -314,7 +320,7 @@ export async function batchUpdateProjectVisibility(
 
 export async function updateProjectDescription(
   projectId: string,
-  description: string
+  description: string,
 ) {
   const session = await auth();
   if (!session?.user?.email) throw new Error("Not authenticated");
@@ -430,7 +436,10 @@ export async function deleteUserAccount() {
   });
 
   if (!user) {
-    console.error("Delete failed: User not found for email:", session.user.email);
+    console.error(
+      "Delete failed: User not found for email:",
+      session.user.email,
+    );
     throw new Error("User not found");
   }
 
@@ -446,7 +455,9 @@ export async function deleteUserAccount() {
   try {
     // STEP 0: Revoke GitHub OAuth GRANT (forces re-authorization)
     console.log("🗑️  Step 0: Revoking GitHub OAuth authorization grant...");
-    const githubAccount = user.accounts.find((acc) => acc.provider === "github");
+    const githubAccount = user.accounts.find(
+      (acc) => acc.provider === "github",
+    );
 
     if (githubAccount?.access_token) {
       try {
@@ -454,7 +465,9 @@ export async function deleteUserAccount() {
         const clientSecret = process.env.AUTH_GITHUB_SECRET;
 
         if (clientId && clientSecret) {
-          const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
+          const basicAuth = Buffer.from(`${clientId}:${clientSecret}`).toString(
+            "base64",
+          );
 
           // First, revoke the authorization grant (removes app from authorized apps)
           console.log("🗑️  Revoking authorization grant...");
@@ -463,21 +476,26 @@ export async function deleteUserAccount() {
             {
               method: "DELETE",
               headers: {
-                "Authorization": `Basic ${basicAuth}`,
-                "Accept": "application/vnd.github+json",
+                Authorization: `Basic ${basicAuth}`,
+                Accept: "application/vnd.github+json",
                 "Content-Type": "application/json",
               },
               body: JSON.stringify({
                 access_token: githubAccount.access_token,
               }),
-            }
+            },
           );
 
           if (grantResponse.ok || grantResponse.status === 404) {
-            console.log("✅ GitHub authorization grant revoked (user must re-authorize)");
+            console.log(
+              "✅ GitHub authorization grant revoked (user must re-authorize)",
+            );
           } else {
             const errorText = await grantResponse.text();
-            console.warn(`⚠️  Grant revocation returned ${grantResponse.status}:`, errorText);
+            console.warn(
+              `⚠️  Grant revocation returned ${grantResponse.status}:`,
+              errorText,
+            );
 
             // Fallback: Try revoking just the token
             console.log("🗑️  Falling back to token revocation...");
@@ -486,25 +504,30 @@ export async function deleteUserAccount() {
               {
                 method: "DELETE",
                 headers: {
-                  "Authorization": `Basic ${basicAuth}`,
-                  "Accept": "application/vnd.github+json",
+                  Authorization: `Basic ${basicAuth}`,
+                  Accept: "application/vnd.github+json",
                   "Content-Type": "application/json",
                 },
                 body: JSON.stringify({
                   access_token: githubAccount.access_token,
                 }),
-              }
+              },
             );
 
             if (tokenResponse.ok || tokenResponse.status === 404) {
               console.log("✅ GitHub token revoked (grant revocation failed)");
             } else {
-              console.warn(`⚠️  Token revocation returned ${tokenResponse.status}`);
+              console.warn(
+                `⚠️  Token revocation returned ${tokenResponse.status}`,
+              );
             }
           }
         }
       } catch (revokeError) {
-        console.warn("⚠️  GitHub OAuth revocation failed (non-critical):", revokeError);
+        console.warn(
+          "⚠️  GitHub OAuth revocation failed (non-critical):",
+          revokeError,
+        );
         // Continue with deletion even if revocation fails
       }
     }
@@ -551,4 +574,309 @@ export async function deleteUserAccount() {
     }
     throw new Error(`Failed to delete account: ${message}`);
   }
+}
+
+// --- README Generation ---
+
+export async function generateReadme(projectId: string): Promise<{
+  success: boolean;
+  readme: string;
+  confidenceScore: number;
+}> {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Not authenticated");
+
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) throw new Error("User not found");
+
+  const project = await db.project.findFirst({
+    where: { id: projectId, userId: user.id },
+  });
+  if (!project) throw new Error("Project not found");
+
+  // Fetch rich context from GitHub
+  const context = await fetchRepoContext(project.url);
+  if (!context) throw new Error("Could not fetch repository context");
+
+  // Detect package manager for accurate install instructions
+  const pkgManager = detectPackageManager(context.configFiles);
+  const scripts = extractNpmScripts(context.configFiles.packageJson);
+  const dependencies = extractDependenciesSummary(context.configFiles);
+
+  // Build prompt with disciplined context (following the spec)
+  const prompt = buildReadmePrompt(context, pkgManager, scripts, dependencies);
+
+  const { text } = await generateText({
+    model: google("gemini-2.5-flash-lite"),
+    prompt,
+  });
+
+  // Save the generated README
+  await db.project.update({
+    where: { id: project.id },
+    data: { aiReadme: sanitizeString(text.trim()) },
+  });
+
+  revalidatePath("/editor");
+  if (user.username) {
+    revalidatePath(`/u/${user.username}`);
+  }
+
+  return {
+    success: true,
+    readme: text.trim(),
+    confidenceScore: context.confidenceScore,
+  };
+}
+
+function buildReadmePrompt(
+  context: Awaited<ReturnType<typeof fetchRepoContext>>,
+  pkgManager: ReturnType<typeof detectPackageManager>,
+  scripts: Record<string, string>,
+  dependencies: string[],
+): string {
+  if (!context) throw new Error("No context");
+
+  // Entrypoint source files (only if present)
+  let sourceFilesSection = "";
+  if (context.sourceFiles.length > 0) {
+    sourceFilesSection = `
+## Entry Point Files
+The following files represent how users interact with this project.
+Infer usage ONLY from these files. Do not speculate beyond them.
+
+${context.sourceFiles
+  .map(
+    (f) => `### ${f.path}
+\`\`\`
+${f.content}
+\`\`\``,
+  )
+  .join("\n\n")}
+`;
+  }
+
+  // Scripts (only meaningful ones)
+  let scriptsSection = "";
+  const relevantScripts = Object.entries(scripts)
+    .filter(([name]) =>
+      ["dev", "start", "build", "test", "lint", "serve"].includes(name),
+    )
+    .map(([name, cmd]) => `- \`${name}\`: ${cmd}`)
+    .join("\n");
+
+  if (relevantScripts) {
+    scriptsSection = `
+## Available Scripts
+${relevantScripts}
+`;
+  }
+
+  return `
+You are the maintainer of this repository writing its README.
+Write as if you built and actively maintain this project.
+
+Voice & Authority Rules (STRICT):
+- Write in a confident, first-party maintainer voice.
+- Do NOT use hedging language (e.g., "likely", "appears", "seems", "aims to", "designed to").
+- Do NOT describe the repository from an external or observational perspective.
+- Do NOT mention inference, assumptions, or analysis.
+- State facts plainly and affirmatively.
+- If a detail cannot be confidently determined from the provided context, OMIT it entirely.
+
+Section Rules:
+- Include ONLY sections that can be confidently supported by the provided context.
+- Prefer omission over speculation.
+- Do NOT include placeholders such as [describe X].
+
+Deployment Rules:
+- Only include a Deployment section if an explicit deployment signal exists (e.g., Dockerfile, vercel.json, CI workflow).
+- Never guess or generalize deployment platforms.
+
+## Project Metadata
+- Name: ${context.name}
+- Description: ${context.description || ""}
+- Primary Language: ${context.language || ""}
+- Topics: ${context.topics.join(", ")}
+- Stars: ${context.stars} | Forks: ${context.forks}
+- License: ${context.license || ""}
+${pkgManager ? `- Package Manager: ${pkgManager.manager}` : ""}
+
+## Existing README (reference only — improve upon it)
+${context.readme ? context.readme.slice(0, 2000) : "None"}
+
+## Repository Structure
+\`\`\`
+${context.fileTree.slice(0, 1500)}
+\`\`\`
+
+## Configuration
+${context.configFiles.packageJson ? `### package.json\n\`\`\`json\n${context.configFiles.packageJson.slice(0, 1500)}\n\`\`\`` : ""}
+${context.configFiles.pyproject ? `### pyproject.toml\n\`\`\`toml\n${context.configFiles.pyproject.slice(0, 1000)}\n\`\`\`` : ""}
+${context.configFiles.cargoToml ? `### Cargo.toml\n\`\`\`toml\n${context.configFiles.cargoToml.slice(0, 1000)}\n\`\`\`` : ""}
+${context.configFiles.goMod ? `### go.mod\n\`\`\`\n${context.configFiles.goMod.slice(0, 500)}\n\`\`\`` : ""}
+${scriptsSection}
+${sourceFilesSection}
+
+## Key Dependencies
+${dependencies.length > 0 ? dependencies.join(", ") : ""}
+
+## Instructions
+Write a README.md that may include the following sections ONLY if supported by the context:
+- Title
+- Description
+- Features
+- Installation
+- Usage
+- Tech Stack
+- Contributing
+- License
+
+Formatting Rules:
+- Use clean, professional Markdown.
+- Keep language concise and factual.
+- Do not invent APIs, features, or workflows.
+- Avoid internal file path narration unless clearly helpful to contributors.
+- Total length should be reasonable for a production README.
+
+Append the following footer EXACTLY at the end of the README:
+
+---
+<sub>Generated by GitProof</sub>
+
+Output ONLY the README markdown.`;
+}
+
+export async function revertReadme(projectId: string) {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Not authenticated");
+
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) throw new Error("User not found");
+
+  const project = await db.project.findFirst({
+    where: { id: projectId, userId: user.id },
+  });
+  if (!project) throw new Error("Project not found");
+
+  await db.project.update({
+    where: { id: project.id },
+    data: { aiReadme: null },
+  });
+
+  revalidatePath("/editor");
+  if (user.username) {
+    revalidatePath(`/u/${user.username}`);
+  }
+
+  return { success: true };
+}
+
+export async function getProjectReadme(projectId: string): Promise<{
+  original: string | null;
+  generated: string | null;
+}> {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Not authenticated");
+
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) throw new Error("User not found");
+
+  const project = await db.project.findFirst({
+    where: { id: projectId, userId: user.id },
+    select: { readme: true, aiReadme: true },
+  });
+
+  if (!project) throw new Error("Project not found");
+
+  return {
+    original: project.readme,
+    generated: project.aiReadme,
+  };
+}
+
+// --- README Generation by GitHub ID (for dashboard modal) ---
+
+export async function generateReadmeByGithubId(githubId: number): Promise<{
+  success: boolean;
+  readme: string;
+  confidenceScore: number;
+}> {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Not authenticated");
+
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) throw new Error("User not found");
+
+  const project = await db.project.findFirst({
+    where: { githubId, userId: user.id },
+  });
+  if (!project) throw new Error("Project not found");
+
+  // Use existing generateReadme logic
+  const context = await fetchRepoContext(project.url);
+  if (!context) throw new Error("Could not fetch repository context");
+
+  const pkgManager = detectPackageManager(context.configFiles);
+  const scripts = extractNpmScripts(context.configFiles.packageJson);
+  const dependencies = extractDependenciesSummary(context.configFiles);
+
+  const prompt = buildReadmePrompt(context, pkgManager, scripts, dependencies);
+
+  const { text } = await generateText({
+    model: google("gemini-2.5-flash-lite"),
+    prompt,
+  });
+
+  await db.project.update({
+    where: { id: project.id },
+    data: { aiReadme: sanitizeString(text.trim()) },
+  });
+
+  revalidatePath("/dashboard");
+  revalidatePath("/editor");
+  if (user.username) {
+    revalidatePath(`/u/${user.username}`);
+  }
+
+  return {
+    success: true,
+    readme: text.trim(),
+    confidenceScore: context.confidenceScore,
+  };
+}
+
+export async function getReadmeByGithubId(githubId: number): Promise<{
+  original: string | null;
+  generated: string | null;
+}> {
+  const session = await auth();
+  if (!session?.user?.email) throw new Error("Not authenticated");
+
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+  });
+  if (!user) throw new Error("User not found");
+
+  const project = await db.project.findFirst({
+    where: { githubId, userId: user.id },
+    select: { readme: true, aiReadme: true },
+  });
+
+  if (!project) {
+    return { original: null, generated: null };
+  }
+
+  return {
+    original: project.readme,
+    generated: project.aiReadme,
+  };
 }

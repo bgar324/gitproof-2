@@ -16,6 +16,7 @@ import {
   LibrarySection,
   SaveButton,
 } from "@/components/editor";
+import { ReadmeGeneratorModal } from "@/components/modals/readme-generator-modal";
 import type { Project, User } from "@prisma/client";
 
 const ITEMS_PER_PAGE = 9;
@@ -47,6 +48,15 @@ export function EditorWorkbench({ user, projects = [] }: EditorWorkbenchProps) {
   const [rewritingProjectId, setRewritingProjectId] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [libraryPage, setLibraryPage] = useState(1);
+
+  // README Generator Modal state
+  const [readmeModalOpen, setReadmeModalOpen] = useState(false);
+  const [selectedProjectForReadme, setSelectedProjectForReadme] = useState<Project | null>(null);
+
+  const handleGenerateReadme = (repo: Project) => {
+    setSelectedProjectForReadme(repo);
+    setReadmeModalOpen(true);
+  };
 
   const handleToggleRepo = (repo: Project) => {
     if (featuredIds.includes(repo.id)) {
@@ -213,6 +223,7 @@ export function EditorWorkbench({ user, projects = [] }: EditorWorkbenchProps) {
               onToggle={handleToggleRepo}
               onUpdateDesc={handleUpdateDesc}
               onRewrite={handleRewrite}
+              onGenerateReadme={handleGenerateReadme}
             />
 
             <LibrarySection
@@ -231,6 +242,17 @@ export function EditorWorkbench({ user, projects = [] }: EditorWorkbenchProps) {
       </div>
 
       <SaveButton isSaving={isSaving} onSave={handleSave} />
+
+      {/* README Generator Modal */}
+      {selectedProjectForReadme && (
+        <ReadmeGeneratorModal
+          open={readmeModalOpen}
+          onOpenChange={setReadmeModalOpen}
+          projectId={selectedProjectForReadme.id}
+          projectName={selectedProjectForReadme.name}
+          hasExistingReadme={!!selectedProjectForReadme.readme}
+        />
+      )}
     </div>
   );
 }

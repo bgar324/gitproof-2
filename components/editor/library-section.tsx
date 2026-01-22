@@ -60,6 +60,7 @@ export function LibrarySection({
             onToggle={onToggle}
             onUpdateDesc={() => {}}
             onRewrite={() => {}}
+            onGenerateReadme={() => {}}
             isRewriting={false}
             currentDescription=""
           />
