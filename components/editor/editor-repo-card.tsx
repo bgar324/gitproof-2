@@ -152,13 +152,13 @@ export function EditorRepoCard({
                   Description
                 </span>
                 <div className="flex items-center gap-2">
-                  <button
+                  {/* <button
                     onClick={() => onGenerateReadme(repo)}
                     className="flex items-center gap-1.5 px-2 py-1 rounded-md bg-secondary/50 border border-border text-[10px] font-medium text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors hover:cursor-pointer"
                   >
                     <FileText size={10} />
                     README
-                  </button>
+                  </button> */}
                   <button
                     onClick={() => onRewrite(repo.id)}
                     disabled={isRewriting}
