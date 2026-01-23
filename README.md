@@ -1050,6 +1050,4 @@ MIT License - see [LICENSE](LICENSE) file
 
 ---
 
-**Built with ❤️ by the GitProof team**
-
-*Transform your GitHub activity into a portfolio that gets you hired.*
+**Built by Benjamin Garcia.**
