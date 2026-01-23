@@ -24,6 +24,7 @@ GitProof 2 analyzes your public GitHub repositories, calculates impact metrics, 
 - [Component System](#-component-system)
 - [Impact Score Algorithm](#-impact-score-algorithm)
 - [AI Integration](#-ai-integration)
+  - [README Generation](#readme-generation)
 - [Authentication](#-authentication-flow)
 - [Security](#-security-features)
 - [Configuration](#%EF%B8%8F-configuration)
@@ -74,6 +75,7 @@ GitProof 2 is a full-stack Next.js application that helps developers:
 
 ### 🤖 AI-Powered Features
 - **Project description rewriting** - Context-aware using README, topics, and stats
+- **README generation** - Analyzes repo structure, dependencies, and source code to generate comprehensive READMEs
 - **Bio generation** - Summarizes your top projects into a professional bio
 - **Insight analysis** - Detects strengths (consistency, expertise) and growth areas
 - **Powered by Gemini 2.5 Flash Lite** - Fast, cost-effective LLM
@@ -353,8 +355,9 @@ model Project {
   forks           Int      @default(0)
   lastPush        DateTime
   impactScore     Int      @default(0)  // 0-50
-  readme          String?
-  aiDescription   String?
+  readme          String?               // Original GitHub README
+  aiDescription   String?               // AI-rewritten description
+  aiReadme        String?               // AI-generated README
   isHidden        Boolean  @default(false)
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
@@ -427,6 +430,9 @@ Located in `app/actions.ts`:
 |--------|-------------|
 | `triggerSync()` | Force sync GitHub repos |
 | `generateAIDescription(projectId)` | Generate AI description |
+| `generateReadme(projectId)` | Generate AI README |
+| `getProjectReadme(projectId)` | Get original + generated README |
+| `revertReadme(projectId)` | Clear generated README |
 | `toggleProfilePublic(isPublic)` | Toggle profile visibility |
 | `updateUserBio(bio)` | Save user bio |
 | `generateUserBio()` | AI generate bio |
@@ -453,11 +459,14 @@ Located in `app/actions.ts`:
 - `top-repos-header` - Section header
 
 #### Editor Components (`components/editor/`)
-- `editor-repo-card` - Editable repo card
+- `editor-repo-card` - Editable repo card with AI rewrite
 - `featured-section` - Featured projects manager
 - `identity-section` - Bio editor
 - `library-section` - All projects grid
 - `save-button` - Save changes button
+
+#### Modal Components (`components/modals/`)
+- `readme-generator-modal` - AI README generation with preview/raw/diff views
 
 #### Profile Components (`components/profile/`)
 - `hero-section` - Profile header
@@ -563,14 +572,129 @@ Total = 37 + 12 + 12 = 50 points (capped) ✨
 
 Used for:
 1. Project description rewriting
-2. User bio generation
-3. Insight analysis
+2. **README generation**
+3. User bio generation
+4. Insight analysis
 
 ### Configuration
 
 ```env
 GOOGLE_GENERATIVE_AI_API_KEY="your_api_key"
 ```
+
+---
+
+### README Generation
+
+The README generator analyzes your repository to create comprehensive, professional documentation.
+
+#### Architecture
+
+```
+lib/readme.ts          → Repository context fetching (GraphQL)
+app/actions.ts         → Server actions (generateReadme, revertReadme)
+components/modals/     → ReadmeGeneratorModal UI component
+```
+
+#### How It Works
+
+1. **Context Fetching** (`lib/readme.ts`)
+   - Fetches repository metadata via GitHub GraphQL API
+   - Retrieves README variants (README.md, README.MD, readme.md)
+   - Extracts config files (package.json, pyproject.toml, Cargo.toml, go.mod, etc.)
+   - Builds file tree (2 levels deep)
+   - Selects language-specific entrypoint files (up to 3)
+
+2. **Confidence Scoring** (0-3 scale)
+   ```
+   +1 point: Has config file (package.json, Cargo.toml, etc.)
+   +1 point: Has recognized primary language
+   +1 point: Has identifiable entrypoint file
+   ```
+
+3. **Smart Entrypoint Detection**
+   - Language-aware file selection (e.g., `src/index.ts` for TypeScript, `main.py` for Python)
+   - Excludes test files, mocks, and utility modules
+   - Truncates source to 1000 chars per file
+
+4. **Generation** (`app/actions.ts`)
+   - Builds context-aware prompt with repo structure, dependencies, and code samples
+   - Sends to Gemini 2.5 Flash Lite
+   - Sanitizes output and saves to `Project.aiReadme`
+
+#### Supported Languages & Entrypoints
+
+| Language | Entrypoint Patterns |
+|----------|---------------------|
+| TypeScript | `src/index.ts`, `src/main.ts`, `src/App.tsx`, `app/page.tsx` |
+| JavaScript | `src/index.js`, `server.js`, `app.js`, `pages/index.jsx` |
+| Python | `main.py`, `app.py`, `src/main.py`, `__main__.py` |
+| Rust | `src/main.rs`, `src/lib.rs` |
+| Go | `main.go`, `cmd/main.go` |
+| Ruby | `lib/main.rb`, `app.rb` |
+| PHP | `index.php`, `public/index.php` |
+| Java | `src/main/java/Main.java`, `App.java` |
+| C# | `Program.cs`, `src/Program.cs` |
+| Swift | `Sources/main.swift`, `App.swift` |
+| Kotlin | `src/main/kotlin/Main.kt` |
+
+#### Package Manager Detection
+
+Automatically detects and includes correct install/run commands:
+
+| Config File | Manager | Install Command |
+|-------------|---------|-----------------|
+| `package.json` | npm/yarn/pnpm/bun | `npm install` |
+| `pyproject.toml` | poetry/pip | `poetry install` |
+| `requirements.txt` | pip | `pip install -r requirements.txt` |
+| `Cargo.toml` | cargo | `cargo build` |
+| `go.mod` | go | `go mod download` |
+| `composer.json` | composer | `composer install` |
+| `Gemfile` | bundler | `bundle install` |
+
+#### UI Component
+
+The `ReadmeGeneratorModal` provides:
+
+- **Preview mode**: Rendered markdown with syntax highlighting
+- **Raw mode**: Plain text for copying
+- **Diff mode**: Side-by-side comparison with original README
+- **Actions**: Copy to clipboard, download as file, revert to original
+
+#### Server Actions
+
+```typescript
+// Generate README for a project
+generateReadme(projectId: string): Promise<{
+  success: boolean;
+  readme: string;
+  confidenceScore: number;
+}>
+
+// Get original and generated READMEs
+getProjectReadme(projectId: string): Promise<{
+  original: string | null;
+  generated: string | null;
+}>
+
+// Clear generated README
+revertReadme(projectId: string): Promise<void>
+
+// Alternative: generate by GitHub repo ID (for dashboard)
+generateReadmeByGithubId(githubId: number): Promise<{...}>
+```
+
+#### Database Schema
+
+```prisma
+model Project {
+  // ... other fields
+  readme      String?   // Original GitHub README
+  aiReadme    String?   // AI-generated README
+}
+```
+
+---
 
 ### Prompt Examples
 
