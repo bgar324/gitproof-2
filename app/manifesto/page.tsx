@@ -116,8 +116,8 @@ export default async function ManifestoPage() {
                   Transparency & Truth
                 </h4>
                 <p className="text-sm text-muted-foreground m-0">
-                  We use only public data from GitHub. No tricks, no
-                  manipulation—just an honest analysis of your contributions.
+                  We use public GitHub data for the core analysis, and any
+                  profile edits you make stay clearly under your control.
                 </p>
               </div>
             </div>

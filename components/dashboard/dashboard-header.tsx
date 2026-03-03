@@ -14,6 +14,7 @@ interface DashboardHeaderProps {
   isStale: boolean;
   hasSynced: boolean;
   onRefresh: () => void;
+  refreshDisabled?: boolean;
 }
 
 export function DashboardHeader({
@@ -25,6 +26,7 @@ export function DashboardHeader({
   isStale,
   hasSynced,
   onRefresh,
+  refreshDisabled = false,
 }: DashboardHeaderProps) {
   const getStreakMessage = (s: number) => {
     if (s === 0) return "The blank canvas is yours. Start a new streak today.";
@@ -83,7 +85,7 @@ export function DashboardHeader({
 
         <button
           onClick={onRefresh}
-          disabled={isRefreshing}
+          disabled={isRefreshing || refreshDisabled}
           className="h-8 px-3 rounded-lg border border-border/50 text-xs font-medium text-muted-foreground hover:text-foreground hover:border-border hover:bg-secondary/50 transition-all flex items-center gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed hover:cursor-pointer"
         >
           <RefreshCw size={12} className={cn(isRefreshing && "animate-spin")} />

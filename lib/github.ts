@@ -1,5 +1,7 @@
 import { auth } from "@/auth";
 import { GraphQLClient, gql } from "graphql-request";
+import { getGitHubAccountByEmail } from "@/lib/github-account";
+import { hasPrivateRepoScope } from "@/lib/github-permissions";
 import {
   checkRateLimit,
   parseGitHubError,
@@ -221,26 +223,19 @@ async function getClient() {
 
   // CRITICAL FIX: Fetch access token from database instead of session
   // This prevents token exposure in client-side cookies
-  const { db } = await import("@/lib/db");
+  const account = await getGitHubAccountByEmail(session.user.email);
 
-  const account = await db.account.findFirst({
-    where: {
-      user: {
-        email: session.user.email,
-      },
-      provider: "github",
-    },
-    select: {
-      access_token: true,
-    },
-  });
-
-  if (!account?.access_token) {
+  if (!account?.accessToken) {
     throw new Error("No GitHub access token found. Please re-authenticate.");
+  }
+  if (hasPrivateRepoScope(account.scope)) {
+    throw new Error(
+      "Legacy GitHub permissions detected. Open Settings and use Reconnect GitHub.",
+    );
   }
 
   return new GraphQLClient(GITHUB_ENDPOINT, {
-    headers: { authorization: `Bearer ${account.access_token}` },
+    headers: { authorization: `Bearer ${account.accessToken}` },
   });
 }
 

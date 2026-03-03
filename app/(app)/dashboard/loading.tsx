@@ -79,8 +79,8 @@ const Skeleton = ({
 export default function DashboardLoading() {
   return (
     <main className="min-h-screen bg-background pt-8 pb-20 px-6 relative overflow-hidden">
-      {/* Subtle noise texture overlay for digital feel */}
-      <div className="pointer-events-none absolute inset-0 bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay"></div>
+      {/* Soft overlay without an external asset request */}
+      <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-transparent via-primary/[0.03] to-transparent mix-blend-overlay"></div>
 
       <div className="max-w-7xl mx-auto space-y-6 relative z-10">
         {/* HEADER SKELETON */}

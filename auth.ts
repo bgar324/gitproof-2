@@ -1,6 +1,8 @@
 import NextAuth from "next-auth";
 import GitHub from "next-auth/providers/github";
 import { db } from "@/lib/db";
+import { hasPrivateRepoScope } from "@/lib/github-permissions";
+import { encryptSecret } from "@/lib/secrets";
 import type { NextAuthConfig } from "next-auth";
 import type { JWT } from "next-auth/jwt";
 
@@ -11,9 +13,9 @@ const authConfig: NextAuthConfig = {
   // But manually persist User/Account to database in signIn callback
   providers: [
     GitHub({
-      // FIXED: Changed from "repo" (full access) to "public_repo" (read-only public repos)
-      // This aligns with privacy policy claim of "read-only access to public data"
-      authorization: { params: { scope: "read:user user:email public_repo" } },
+      // Only request identity scopes.
+      // Public repository data is fetched without private-repository access.
+      authorization: { params: { scope: "read:user user:email" } },
     }),
   ],
   callbacks: {
@@ -21,6 +23,7 @@ const authConfig: NextAuthConfig = {
     async signIn({ user, account, profile }) {
       try {
         if (!user?.email) return false;
+        if (hasPrivateRepoScope(account?.scope)) return false;
 
         const login: string | undefined =
           profile && typeof profile.login === "string" ? profile.login : undefined;
@@ -56,12 +59,12 @@ const authConfig: NextAuthConfig = {
                 },
               },
               update: {
-                access_token: account.access_token,
-                refresh_token: account.refresh_token,
+                access_token: encryptSecret(account.access_token),
+                refresh_token: encryptSecret(account.refresh_token),
                 expires_at: account.expires_at,
                 token_type: account.token_type,
                 scope: account.scope,
-                id_token: account.id_token,
+                id_token: encryptSecret(account.id_token),
                 session_state:
                   typeof account.session_state === "string"
                     ? account.session_state
@@ -72,12 +75,12 @@ const authConfig: NextAuthConfig = {
                 type: account.type,
                 provider: account.provider,
                 providerAccountId: account.providerAccountId,
-                access_token: account.access_token,
-                refresh_token: account.refresh_token,
+                access_token: encryptSecret(account.access_token),
+                refresh_token: encryptSecret(account.refresh_token),
                 expires_at: account.expires_at,
                 token_type: account.token_type,
                 scope: account.scope,
-                id_token: account.id_token,
+                id_token: encryptSecret(account.id_token),
                 session_state:
                   typeof account.session_state === "string"
                     ? account.session_state

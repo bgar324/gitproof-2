@@ -1,145 +1,100 @@
 "use client";
 
-import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import Image from "next/image";
-import { Cpu, Zap, TrendingUp } from "lucide-react";
-import { DEMO_USER, DEMO_STATS, DEMO_INSIGHTS } from "@/lib/data";
+import { Cpu, ShieldCheck } from "lucide-react";
+import { DEMO_INSIGHTS, DEMO_STATS, DEMO_USER } from "@/lib/data";
 
 export function DemoReportCard() {
-  const x = useMotionValue(0);
-  const y = useMotionValue(0);
-
-  const mouseX = useSpring(x, { stiffness: 500, damping: 100 });
-  const mouseY = useSpring(y, { stiffness: 500, damping: 100 });
-
-  function onMouseMove({ currentTarget, clientX, clientY }: React.MouseEvent) {
-    const { left, top, width, height } = currentTarget.getBoundingClientRect();
-    x.set(clientX - left - width / 2);
-    y.set(clientY - top - height / 2);
-  }
-
-  const rotateX = useTransform(mouseY, [-200, 200], [5, -5]);
-  const rotateY = useTransform(mouseX, [-200, 200], [-5, 5]);
-
   return (
-    <motion.div
-      style={{ perspective: 1000 }}
-      className="relative w-full max-w-md mx-auto"
-      onMouseMove={onMouseMove}
-      onMouseLeave={() => {
-        x.set(0);
-        y.set(0);
-      }}
-    >
-      <motion.div
-        style={{ rotateX, rotateY }}
-        className="relative bg-card border border-border rounded-xl overflow-hidden shadow-2xl shadow-primary/10"
-      >
-        {/* HEADER */}
-        <div className="relative p-6 pb-8 border-b border-border bg-muted/5">
-          <div className="relative flex justify-between items-start z-10">
-            <div className="flex gap-4 items-center">
-              <div className="w-16 h-16 rounded-full border-2 border-background shadow-lg overflow-hidden bg-secondary">
-                <Image
-                  src={DEMO_USER.image}
-                  alt={DEMO_USER.name}
-                  width={64}
-                  height={64}
-                  className="w-full h-full object-cover"
-                />
+    <div className="rounded-[1.75rem] border border-border/70 bg-background shadow-sm">
+      <div className="border-b border-border/70 px-6 py-5">
+        <div className="mb-4 flex items-center justify-between text-xs font-medium text-muted-foreground">
+          <span>Sample profile</span>
+          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2.5 py-1">
+            <ShieldCheck size={12} className="text-emerald-500" />
+            Public repos
+          </span>
+        </div>
+
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="h-14 w-14 overflow-hidden rounded-2xl border border-border bg-secondary">
+              <Image
+                src={DEMO_USER.image}
+                alt={DEMO_USER.name}
+                width={56}
+                height={56}
+                className="h-full w-full object-cover"
+              />
+            </div>
+            <div className="min-w-0">
+              <div className="truncate font-serif text-xl text-foreground">
+                {DEMO_USER.name}
               </div>
-              <div>
-                <h2 className="text-xl font-serif font-bold tracking-tight text-foreground">
-                  {DEMO_USER.name}
-                </h2>
-                <p className="text-sm text-muted-foreground font-mono mb-2">
-                  @{DEMO_USER.username}
-                </p>
-                <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-background border border-border shadow-sm">
-                  <Cpu size={12} className="text-blue-500" />
-                  <span className="text-[10px] font-medium tracking-wide text-foreground uppercase">
-                    {DEMO_STATS.archetype}
-                  </span>
-                </div>
+              <div className="truncate font-mono text-xs text-muted-foreground">
+                @{DEMO_USER.username}
+              </div>
+              <div className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-[10px] font-medium uppercase tracking-wide text-muted-foreground">
+                <Cpu size={11} className="text-primary" />
+                {DEMO_STATS.archetype}
               </div>
             </div>
+          </div>
 
-            <div className="flex flex-col items-center">
-              <div className="w-14 h-14 flex items-center justify-center bg-amber-500 text-white font-serif text-3xl font-bold rounded-xl shadow-lg shadow-amber-500/20 relative overflow-hidden">
-                {DEMO_STATS.grade}
-                <div className="absolute top-0 right-0 -mr-4 -mt-4 w-10 h-10 bg-white/20 blur-xl rounded-full" />
-              </div>
-              <span className="text-[9px] font-mono text-muted-foreground mt-1.5 uppercase tracking-widest">
-                Grade
-              </span>
+          <div className="shrink-0 text-right">
+            <div className="font-serif text-3xl text-foreground">{DEMO_STATS.grade}</div>
+            <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+              Grade
             </div>
           </div>
         </div>
+      </div>
 
-        {/* STATS GRID */}
-        <div className="grid grid-cols-3 divide-x divide-border border-b border-border bg-card">
-          <div className="flex flex-col items-center justify-center p-4">
-            <span className="font-serif text-xl text-foreground font-medium">
-              {DEMO_STATS.impactScore}
-            </span>
-            <span className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1">
-              Impact
-            </span>
+      <div className="grid grid-cols-3 border-b border-border/70">
+        <div className="px-4 py-4 text-center">
+          <div className="font-serif text-2xl text-foreground">{DEMO_STATS.impactScore}</div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            Impact
           </div>
-          <div className="flex flex-col items-center justify-center p-4">
-            <span className="font-serif text-xl text-foreground font-medium">
-              {DEMO_STATS.totalContributions}
-            </span>
-            <span className="text-[9px] uppercase tracking-widest text-muted-foreground mt-1">
-              Commits
-            </span>
+        </div>
+        <div className="border-x border-border/70 px-4 py-4 text-center">
+          <div className="font-serif text-2xl text-foreground">
+            {DEMO_STATS.totalContributions}
           </div>
-          <div className="flex flex-col items-center justify-center p-4">
-            <span className="font-serif text-xl text-foreground font-medium">
-              {DEMO_STATS.consistency}%
-            </span>
-            <span className="text-[9px] uppercase tracking-widest text-emerald-500 mt-1">
-              Consistency
-            </span>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            Commits
+          </div>
+        </div>
+        <div className="px-4 py-4 text-center">
+          <div className="font-serif text-2xl text-foreground">
+            {DEMO_STATS.consistency}%
+          </div>
+          <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
+            Consistency
+          </div>
+        </div>
+      </div>
+
+      <div className="space-y-4 px-6 py-5">
+        <div>
+          <div className="mb-3 text-xs font-medium uppercase tracking-[0.22em] text-muted-foreground">
+            Summary
+          </div>
+          <div className="space-y-3">
+            {DEMO_INSIGHTS.map((insight) => (
+              <div key={insight} className="flex gap-3 text-sm leading-6 text-foreground/85">
+                <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-foreground/50" />
+                <span>{insight}</span>
+              </div>
+            ))}
           </div>
         </div>
 
-        {/* INSIGHTS */}
-        <div className="p-6 space-y-6 bg-gradient-to-b from-card to-muted/20">
-          <div>
-            <div className="flex items-center gap-2 mb-3">
-              <Zap size={14} className="text-emerald-500" />
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">
-                Detected Strengths
-              </h3>
-            </div>
-            <div className="space-y-2.5">
-              {DEMO_INSIGHTS.map((text, i) => (
-                <div key={i} className="flex gap-3 items-start">
-                  <div className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.5)]" />
-                  <span className="text-xs text-foreground/80 leading-relaxed">
-                    {text}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-          <div className="pt-4 border-t border-dashed border-border/50">
-            <div className="flex items-center gap-2 mb-3">
-              <TrendingUp size={14} className="text-amber-500" />
-              <h3 className="text-xs font-bold text-foreground uppercase tracking-widest">
-                Growth Focus
-              </h3>
-            </div>
-            <div className="flex gap-3 items-start">
-              <div className="mt-1.5 w-1.5 h-1.5 rounded-full shrink-0 bg-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.5)]" />
-              <span className="text-xs text-foreground/80 leading-relaxed">
-                Documentation coverage is below top-tier standards.
-              </span>
-            </div>
-          </div>
+        <div className="rounded-2xl border border-border/70 bg-secondary/35 px-4 py-3 text-sm leading-6 text-foreground/80">
+          You can edit the bio and choose which repositories to feature before
+          sharing the public link.
         </div>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

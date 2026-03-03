@@ -1,6 +1,7 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
 import { db } from "@/lib/db";
+import { getGitHubConnectionStatus } from "@/lib/github-connection";
 import { ReportCard } from "@/components/report-card";
 import { EditorWorkbench } from "./view";
 import { calculateUserStats, analyzeUserInsights } from "@/lib/stats";
@@ -35,6 +36,10 @@ export default async function EditorPage() {
   });
 
   if (!userWithVisibleProjects) return redirect("/");
+
+  const { requiresReconnect } = await getGitHubConnectionStatus(
+    session.user.email,
+  );
 
   // Calculate stats based on VISIBLE projects only (matches public profile)
   const stats = calculateUserStats(userWithVisibleProjects);
@@ -113,6 +118,7 @@ export default async function EditorPage() {
           <EditorWorkbench
             user={userWithVisibleProjects}
             projects={userWithAllProjects.projects}
+            requiresReconnect={requiresReconnect}
           />
         </div>
       </section>

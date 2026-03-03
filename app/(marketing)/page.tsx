@@ -3,8 +3,7 @@
 import { useSession } from "next-auth/react";
 import { Hero } from "@/components/marketing/hero";
 import { FeaturesBento } from "@/components/marketing/features-bento";
-import { StepsSection } from "@/components/marketing/steps-section";
-import { FinalCTA } from "@/components/marketing/final-cta";
+import { ArchetypeCarousel } from "@/components/marketing/archetype-carousel";
 import { Navbar } from "@/components/layout/navbar";
 import { Footer } from "@/components/layout/footer";
 
@@ -16,8 +15,7 @@ export default function LandingPage() {
       <Navbar session={session} variant="marketing" />
       <Hero session={session} />
       <FeaturesBento />
-      <StepsSection />
-      <FinalCTA session={session} />
+      <ArchetypeCarousel session={session} />
       <Footer />
     </main>
   );

@@ -88,7 +88,8 @@ export function ReadmeGeneratorModal({
         setConfidenceScore(null);
         toast.success("README reverted");
       } catch (err) {
-        toast.error("Failed to revert README");
+        const message = err instanceof Error ? err.message : "Failed to revert README";
+        toast.error(message);
       }
     });
   };

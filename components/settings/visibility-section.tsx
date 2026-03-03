@@ -7,17 +7,24 @@ interface VisibilitySectionProps {
   isPublic: boolean;
   username: string;
   onPublicChange: (isPublic: boolean) => void;
+  disabled?: boolean;
 }
 
 export function VisibilitySection({
   isPublic,
   username,
   onPublicChange,
+  disabled = false,
 }: VisibilitySectionProps) {
   return (
     <Section title="Visibility" description="Control who can see your GitProof report card.">
       <div className="space-y-4">
-        <Switch label="Public Profile" checked={isPublic} onCheckedChange={onPublicChange} />
+        <Switch
+          label="Public Profile"
+          checked={isPublic}
+          onCheckedChange={onPublicChange}
+          disabled={disabled}
+        />
         {isPublic && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
@@ -25,7 +32,7 @@ export function VisibilitySection({
             className="p-3 bg-secondary/30 rounded-lg border border-border flex items-center justify-between text-xs"
           >
             <span className="text-muted-foreground truncate">
-              gitproof.dev/u/{username || "username"}
+              /u/{username || "username"}
             </span>
             <a
               href={`/u/${username}`}

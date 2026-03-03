@@ -1,12 +1,18 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import { motion, type Variants } from "framer-motion";
 import { useTheme } from "next-themes";
-import { RefreshCw, Save } from "lucide-react";
-import { signOut } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { triggerSync, deleteUserAccount } from "@/app/actions";
+import {
+  deleteUserAccount,
+  prepareGitHubReconnect,
+  toggleProfilePublic,
+  triggerSync,
+  updateEmailNotifications,
+} from "@/app/actions";
 import type { Session } from "next-auth";
 import {
   AppearanceSection,
@@ -23,9 +29,14 @@ interface SettingsViewProps {
     emailNotifications?: boolean;
     theme?: string;
   };
+  requiresReconnect?: boolean;
 }
 
-export default function SettingsView({ user, settings }: SettingsViewProps) {
+export default function SettingsView({
+  user,
+  settings,
+  requiresReconnect = false,
+}: SettingsViewProps) {
   const { theme, setTheme } = useTheme();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
@@ -35,8 +46,10 @@ export default function SettingsView({ user, settings }: SettingsViewProps) {
 
   const [isPublic, setIsPublic] = useState(initialPublic);
   const [emailNotifs, setEmailNotifs] = useState(initialNotifs);
-  const [isSaving, setIsSaving] = useState(false);
   const [isSyncing, setIsSyncing] = useState(false);
+  const [isUpdatingPublic, setIsUpdatingPublic] = useState(false);
+  const [isUpdatingNotifs, setIsUpdatingNotifs] = useState(false);
+  const [isReconnecting, setIsReconnecting] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [confirmUsername, setConfirmUsername] = useState("");
@@ -51,39 +64,94 @@ export default function SettingsView({ user, settings }: SettingsViewProps) {
     try {
       await triggerSync();
       router.refresh();
+      toast.success("GitHub data synced.");
     } catch (error) {
       console.error("Sync failed:", error);
-      alert("Sync failed. Please try again.");
+      toast.error(
+        error instanceof Error ? error.message : "Sync failed. Please try again.",
+      );
     } finally {
       setIsSyncing(false);
     }
   };
 
-  const handleSave = async () => {
-    setIsSaving(true);
-    // TODO: Connect to backend API to persist settings
-    setTimeout(() => setIsSaving(false), 1000);
+  const handlePublicChange = async (nextValue: boolean) => {
+    setIsPublic(nextValue);
+    setIsUpdatingPublic(true);
+    try {
+      await toggleProfilePublic(nextValue);
+      toast.success(
+        nextValue ? "Public profile enabled." : "Public profile hidden.",
+      );
+      router.refresh();
+    } catch (error) {
+      console.error("Visibility update failed:", error);
+      setIsPublic(!nextValue);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not update profile visibility.",
+      );
+    } finally {
+      setIsUpdatingPublic(false);
+    }
+  };
+
+  const handleNotificationsChange = async (nextValue: boolean) => {
+    setEmailNotifs(nextValue);
+    setIsUpdatingNotifs(true);
+    try {
+      await updateEmailNotifications(nextValue);
+      toast.success(
+        nextValue
+          ? "Product email preference saved."
+          : "Product email preference disabled.",
+      );
+      router.refresh();
+    } catch (error) {
+      console.error("Notification update failed:", error);
+      setEmailNotifs(!nextValue);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Could not update notification settings.",
+      );
+    } finally {
+      setIsUpdatingNotifs(false);
+    }
   };
 
   const handleDeleteAccount = async () => {
-    console.log("🔴 DELETE INITIATED - handleDeleteAccount called");
     setIsDeleting(true);
     try {
-      console.log("🔴 Calling deleteUserAccount server action...");
-      const result = await deleteUserAccount();
-      console.log("🔴 deleteUserAccount returned:", result);
-
-      console.log("🔴 Signing out...");
+      await deleteUserAccount();
       await signOut({ callbackUrl: "/" });
     } catch (error) {
-      console.error("🔴 Delete failed in handleDeleteAccount:", error);
-      alert(
-        `Failed to delete account: ${
-          error instanceof Error ? error.message : "Unknown error"
-        }`
+      console.error("Account deletion failed:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to delete account. Please try again.",
       );
       setIsDeleting(false);
       setShowDeleteConfirm(false);
+    }
+  };
+
+  const handleReconnect = async () => {
+    setIsReconnecting(true);
+    try {
+      await prepareGitHubReconnect();
+      await signOut({ redirect: false });
+      await signIn("github", { callbackUrl: "/dashboard" });
+    } catch (error) {
+      console.error("GitHub reconnect failed:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to reconnect GitHub. Please try again.",
+      );
+      setIsReconnecting(false);
     }
   };
 
@@ -127,18 +195,6 @@ export default function SettingsView({ user, settings }: SettingsViewProps) {
               Manage your profile and preferences.
             </p>
           </div>
-          {/* <button
-            onClick={handleSave}
-            disabled={isSaving}
-            className="h-10 px-6 rounded-lg bg-foreground text-background hover:opacity-90 transition-opacity text-sm font-medium flex items-center gap-2 shadow-lg"
-          >
-            {isSaving ? (
-              <RefreshCw size={16} className="animate-spin" />
-            ) : (
-              <Save size={16} />
-            )}
-            {isSaving ? "Saving..." : "Save Changes"}
-          </button> */}
         </motion.div>
 
         <div className="space-y-2">
@@ -146,11 +202,12 @@ export default function SettingsView({ user, settings }: SettingsViewProps) {
             <AppearanceSection theme={theme} onThemeChange={setTheme} />
           </motion.div>
           <motion.div variants={itemMotion}>
-            {/* <VisibilitySection
+            <VisibilitySection
               isPublic={isPublic}
               username={username}
-              onPublicChange={setIsPublic}
-            /> */}
+              onPublicChange={handlePublicChange}
+              disabled={isUpdatingPublic}
+            />
           </motion.div>
           <motion.div variants={itemMotion}>
             <AccountSection
@@ -161,13 +218,17 @@ export default function SettingsView({ user, settings }: SettingsViewProps) {
               }}
               isSyncing={isSyncing}
               onResync={handleResync}
+              requiresReconnect={requiresReconnect}
+              isReconnecting={isReconnecting}
+              onReconnect={handleReconnect}
             />
           </motion.div>
           <motion.div variants={itemMotion}>
-            {/* <NotificationsSection
+            <NotificationsSection
               emailNotifs={emailNotifs}
-              onEmailNotifsChange={setEmailNotifs}
-            /> */}
+              onEmailNotifsChange={handleNotificationsChange}
+              disabled={isUpdatingNotifs}
+            />
           </motion.div>
           <motion.div variants={itemMotion}>
             <DangerZoneSection

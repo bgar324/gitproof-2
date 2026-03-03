@@ -74,8 +74,6 @@ export async function syncUserData(
   email: string,
   image: string
 ) {
-  console.log(`🔄 Syncing data for ${githubUsername}...`);
-
   const [profile, repos] = await Promise.all([
     fetchGithubProfile(githubUsername),
     fetchUserRepos(githubUsername),

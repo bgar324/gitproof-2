@@ -3,5 +3,6 @@ export * from "./archetype-wheel";
 export * from "./demo-report-card";
 export * from "./hero";
 export * from "./features-bento";
+export * from "./archetype-carousel";
 export * from "./steps-section";
 export * from "./final-cta";

@@ -12,7 +12,9 @@ export function TopReposHeader({ repoCount, onInfoClick }: TopReposHeaderProps) 
       <div>
         <h3 className="font-serif text-xl mb-1">Top Repositories</h3>
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <span>Ranked by Impact Score</span>
+          <span>
+            Ranked by Impact Score ({Math.min(repoCount, 6)} of {repoCount})
+          </span>
           <span className="text-border">•</span>
           <button
             onClick={onInfoClick}

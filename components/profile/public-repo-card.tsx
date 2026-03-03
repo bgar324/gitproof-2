@@ -4,8 +4,6 @@ import {
   Code2,
   Star,
   GitFork,
-  Globe,
-  Lock,
   Github,
   ExternalLink,
 } from "lucide-react";

@@ -4,76 +4,70 @@ import { GitGraph } from "lucide-react";
 export function Footer() {
   const links = [
     { href: "/methodology", label: "Methodology" },
-    { href: "/manifesto", label: "Manifesto" },
+    { href: "/privacy", label: "Privacy" },
     {
       href: "https://github.com/bgar324/gitproof-2",
       label: "GitHub",
       external: true,
     },
-    { href: "/privacy", label: "Privacy" },
   ];
 
   return (
-    <footer className="w-full border-t border-border bg-background px-6 py-8">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-        {/* Left: Brand & Copyright */}
-        <div className="flex items-center gap-3 group">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 transition-transform">
-            <GitGraph size={18} />
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:gap-2">
-            <span className="font-serif font-bold text-lg tracking-tight text-foreground">
-              GitProof
-            </span>
-            {/* <span className="hidden sm:block text-muted-foreground/40 text-xs">
-              © {currentYear}
-            </span> */}
-          </div>
-        </div>
-
-        {/* Center: Navigation with Dot Dividers */}
-        <nav className="flex items-center text-sm font-medium text-muted-foreground">
-          {links.map((link, index) => (
-            <div key={link.href} className="flex items-center">
-              {link.external ? (
-                <a
-                  href={link.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="hover:text-primary transition-colors"
-                >
-                  {link.label}
-                </a>
-              ) : (
-                <Link
-                  href={link.href}
-                  className="hover:text-primary transition-colors"
-                >
-                  {link.label}
-                </Link>
-              )}
-              {/* Only show the dot if it's not the last item */}
-              {index < links.length - 1 && (
-                <span className="mx-3 text-border select-none">·</span>
-              )}
+    <footer className="border-t border-border/70 bg-secondary/15 px-6 py-8">
+      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[1fr_auto] lg:items-end">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-border/70 bg-background text-foreground">
+              <GitGraph size={17} />
             </div>
-          ))}
-        </nav>
+            <div className="leading-none">
+              <div className="font-serif text-lg tracking-tight text-foreground">
+                GitProof
+              </div>
+            </div>
+          </div>
 
-        {/* Right: Personal Credit */}
-        <div className="text-xs text-muted-foreground/70">
-          <p className="hover:text-foreground transition-colors">
+          <p className="max-w-xl text-sm leading-7 text-muted-foreground">
+            GitProof reads public GitHub data, stores synced profile data and your
+            saved edits, and lets you publish a cleaner public profile.
+          </p>
+
+          <div className="text-xs text-muted-foreground">
             Built by{" "}
             <a
               href="https://bentgarcia.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-foreground hover:text-primary font-medium transition-colors underline underline-offset-4 decoration-border/50 hover:decoration-primary"
+              className="text-foreground transition-colors hover:text-primary"
             >
               Benjamin Garcia
             </a>
-          </p>
+          </div>
         </div>
+
+        <nav className="flex flex-wrap items-center gap-2">
+          {links.map((link) =>
+            link.external ? (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-10 items-center rounded-full border border-border/70 bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary/40"
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                className="inline-flex h-10 items-center rounded-full border border-border/70 bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary/40"
+              >
+                {link.label}
+              </Link>
+            ),
+          )}
+        </nav>
       </div>
     </footer>
   );

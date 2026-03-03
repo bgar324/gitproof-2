@@ -2,6 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
+import { toast } from "sonner";
 import { 
   Search, ArrowLeft, GitFork, Star, Code2, ArrowUpRight 
 } from "lucide-react";
@@ -66,16 +67,22 @@ export default function ReposView({
   repos,
   lastSyncedAt,
   isStale,
+  needsInitialSync,
+  requiresReconnect,
 }: {
   repos: GithubRepo[];
   lastSyncedAt: Date | null;
   isStale: boolean;
+  needsInitialSync: boolean;
+  requiresReconnect: boolean;
 }) {
   const router = useRouter();
   const [search, setSearch] = useState("");
   const [selectedRepo, setSelectedRepo] = useState<GithubRepo | null>(null);
   const [sortMode, setSortMode] = useState<"impact" | "stars" | "recent">("impact");
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isBootstrapping, setIsBootstrapping] = useState(needsInitialSync);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [timeAgo, setTimeAgo] = useState(
     lastSyncedAt ? getTimeAgo(lastSyncedAt) : "never"
   );
@@ -88,6 +95,48 @@ export default function ReposView({
     return () => clearInterval(interval);
   }, [lastSyncedAt]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function runInitialSync() {
+      if (!needsInitialSync || requiresReconnect) {
+        setIsBootstrapping(false);
+        return;
+      }
+
+      setBootstrapError(null);
+      setIsRefreshing(true);
+
+      try {
+        await triggerSync();
+        if (!cancelled) {
+          setTimeAgo("just now");
+          router.refresh();
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Initial sync failed. Please try again.";
+          setBootstrapError(message);
+          toast.error(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRefreshing(false);
+          setIsBootstrapping(false);
+        }
+      }
+    }
+
+    void runInitialSync();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [needsInitialSync, requiresReconnect, router]);
+
   const handleSync = async () => {
     setIsRefreshing(true);
     try {
@@ -96,6 +145,9 @@ export default function ReposView({
       setTimeAgo("just now");
     } catch (error) {
       console.error("Sync failed:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Sync failed. Please try again.",
+      );
     } finally {
       setIsRefreshing(false);
     }
@@ -175,7 +227,29 @@ export default function ReposView({
           </div>
         </div>
 
-        {isStale && (
+        {requiresReconnect && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700">
+            Legacy GitHub permissions were detected. Reconnect GitHub in{" "}
+            <Link href="/settings" className="font-medium underline">
+              Settings
+            </Link>{" "}
+            before syncing repositories again.
+          </div>
+        )}
+
+        {isBootstrapping && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+            Syncing your repositories for the first time. This can take a moment.
+          </div>
+        )}
+
+        {bootstrapError && !requiresReconnect && (
+          <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-600">
+            {bootstrapError}
+          </div>
+        )}
+
+        {isStale && !requiresReconnect && (
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-lg border border-amber-500/20 bg-amber-500/5 px-4 py-3">
             <p className="text-xs text-amber-700">
               {lastSyncedAt

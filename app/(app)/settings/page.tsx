@@ -1,6 +1,8 @@
 import { auth } from "@/auth";
+import { db } from "@/lib/db";
+import { getGitHubConnectionStatus } from "@/lib/github-connection";
 import { redirect } from "next/navigation";
-import SettingsView from "./view"; // <--- Now this import will work!
+import SettingsView from "./view";
 
 export default async function SettingsPage() {
   const session = await auth();
@@ -9,14 +11,31 @@ export default async function SettingsPage() {
     redirect("/");
   }
 
-  // Mock settings for now
-  const mockSettings = {
-    isPublic: true,
-    emailNotifications: false,
-    theme: "dark"
-  };
+  if (!session.user.email) {
+    redirect("/");
+  }
+
+  const user = await db.user.findUnique({
+    where: { email: session.user.email },
+    select: {
+      isPublic: true,
+      emailNotifications: true,
+    },
+  });
+
+  if (!user) {
+    redirect("/");
+  }
+
+  const { requiresReconnect } = await getGitHubConnectionStatus(
+    session.user.email,
+  );
 
   return (
-    <SettingsView user={session.user} settings={mockSettings} />
+    <SettingsView
+      user={session.user}
+      settings={user}
+      requiresReconnect={requiresReconnect}
+    />
   );
 }

@@ -1,10 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
-import { Sun, Moon, GitGraph, LogOut, LayoutDashboard } from "lucide-react";
+import { GitGraph, LayoutDashboard, LogOut, Moon, Sun } from "lucide-react";
 import { useSyncExternalStore } from "react";
 import { signIn, signOut } from "next-auth/react";
 import type { Session } from "next-auth";
@@ -15,6 +14,9 @@ interface NavbarProps {
   variant?: "marketing" | "app" | "public";
 }
 
+const chromeButtonClass =
+  "inline-flex h-10 items-center justify-center rounded-full border border-border/70 bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-secondary/50 cursor-pointer";
+
 export function Navbar({ session, variant = "marketing" }: NavbarProps) {
   const pathname = usePathname();
   const { theme, setTheme } = useTheme();
@@ -22,16 +24,22 @@ export function Navbar({ session, variant = "marketing" }: NavbarProps) {
   const isClient = useSyncExternalStore(
     () => () => {},
     () => true,
-    () => false
+    () => false,
   );
 
   const isAuthenticated = !!session?.user;
   const homeHref = isAuthenticated ? "/dashboard" : "/";
 
-  const marketingLinks = [
-    { href: "/methodology", label: "Methodology" },
-    { href: "/manifesto", label: "Manifesto" },
-  ];
+  const navLinks =
+    variant === "app" && isAuthenticated
+      ? [
+          { href: "/dashboard", label: "Dashboard" },
+          { href: "/settings", label: "Settings" },
+        ]
+      : [
+          { href: "/methodology", label: "Methodology" },
+          { href: "/privacy", label: "Privacy" },
+        ];
 
   const handleSignIn = () => {
     signIn("github", { callbackUrl: "/dashboard" });
@@ -44,7 +52,7 @@ export function Navbar({ session, variant = "marketing" }: NavbarProps) {
   const ThemeToggle = (
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-      className="p-2 rounded-full hover:bg-accent transition-colors hover:cursor-pointer"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border/70 bg-background text-muted-foreground transition-colors hover:bg-secondary/50 hover:text-foreground hover:cursor-pointer"
       aria-label="Toggle theme"
     >
       {isClient && theme === "dark" ? <Moon size={16} /> : <Sun size={16} />}
@@ -52,114 +60,75 @@ export function Navbar({ session, variant = "marketing" }: NavbarProps) {
   );
 
   return (
-    <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/40">
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
-        {/* Logo */}
-        <Link href={homeHref} className="flex items-center gap-2 group">
-          <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-            <GitGraph size={18} />
+    <nav className="sticky top-0 z-50 border-b border-border/70 bg-background/92 backdrop-blur">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-6">
+        <Link href={homeHref} className="flex min-w-0 items-center gap-3">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl border border-border/70 bg-secondary/40 text-foreground">
+            <GitGraph size={17} />
           </div>
-          <span className="font-serif text-lg md:text-xl font-bold tracking-tight">
-            GitProof
-          </span>
+          <div className="min-w-0 leading-none">
+            <div className="font-serif text-lg tracking-tight text-foreground">
+              GitProof
+            </div>
+          </div>
         </Link>
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-4 md:gap-6">
-          {/* MARKETING VARIANT */}
-          {variant === "marketing" && (
-            <>
-              <div className="hidden sm:flex items-center gap-6 text-sm font-medium">
-                {marketingLinks.map((link) => (
-                  <Link
-                    key={link.href}
-                    href={link.href}
-                    className={cn(
-                      "transition-colors hover:text-foreground",
-                      pathname === link.href
-                        ? "text-foreground"
-                        : "text-muted-foreground"
-                    )}
-                  >
-                    {link.label}
-                  </Link>
-                ))}
-              </div>
-              <div className="hidden sm:block h-4 w-px bg-border" />
-            </>
-          )}
+        <div className="flex items-center gap-3">
+          <div className="hidden items-center rounded-full border border-border/70 bg-secondary/30 p-1 md:flex">
+            {navLinks.map((link) => {
+              const isActive = pathname === link.href || pathname.startsWith(`${link.href}/`);
 
-          {/* PUBLIC VARIANT */}
-          {variant === "public" && ThemeToggle}
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={cn(
+                    "rounded-full px-3 py-1.5 text-sm font-medium transition-colors",
+                    isActive
+                      ? "bg-background text-foreground"
+                      : "text-muted-foreground hover:text-foreground",
+                  )}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+          </div>
 
-          {/* MARKETING / APP THEME TOGGLE */}
-          {variant !== "public" && ThemeToggle}
+          {ThemeToggle}
 
-          {/* AUTH ACTIONS */}
           {isAuthenticated ? (
             <>
-              {variant === "app" && (
-                <>
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <LayoutDashboard size={16} />
-                    <span className="hidden sm:inline">Dashboard</span>
-                  </Link>
-                  <div className="w-px h-6 bg-border/50" />
-                </>
-              )}
-
               {(variant === "marketing" || variant === "public") &&
-                pathname !== "/dashboard" &&
-                session?.user && (
-                  <Link
-                    href="/dashboard"
-                    className="flex items-center gap-2 px-4 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded-full transition-all"
-                  >
-                    {session.user.image ? (
-                      <Image
-                        src={session.user.image}
-                        alt={session.user.name || "User"}
-                        width={24}
-                        height={24}
-                        className="w-6 h-6 rounded-full"
-                      />
-                    ) : (
-                      <div className="w-6 h-6 rounded-full bg-secondary" />
-                    )}
-                    <span className="hidden sm:inline text-sm font-medium">
-                      @{session.user.username || session.user.name || "user"}
-                    </span>
+                pathname !== "/dashboard" && (
+                  <Link href="/dashboard" className={chromeButtonClass}>
+                    <LayoutDashboard size={16} className="mr-2" />
+                    Open App
                   </Link>
                 )}
 
               {variant === "app" && (
                 <button
                   onClick={handleSignOut}
-                  className="flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-red-500 transition-colors"
+                  className={chromeButtonClass}
                 >
-                  <LogOut size={16} />
-                  <span className="hidden sm:inline">Sign Out</span>
+                  <LogOut size={16} className="mr-2" />
+                  Sign Out
                 </button>
               )}
             </>
           ) : (
             <>
               {variant === "public" ? (
-                <Link
-                  href="/"
-                  className="text-xs font-medium bg-foreground text-background px-4 py-2 rounded-full hover:opacity-90 transition-opacity"
-                >
-                  Claim Your Profile
+                <Link href="/" className={chromeButtonClass}>
+                  Open GitProof
                 </Link>
               ) : (
                 <button
                   onClick={handleSignIn}
-                  className="text-sm font-medium px-5 py-2 bg-secondary hover:bg-secondary/80 border border-border rounded-full transition-all"
+                  className={chromeButtonClass}
                 >
-                  Sign In
+                  Connect GitHub
                 </button>
               )}
             </>

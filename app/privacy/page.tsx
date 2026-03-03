@@ -29,13 +29,14 @@ export default async function PrivacyPage() {
             <span className="block text-primary mt-2">Your Control</span>
           </h1>
           <p className="text-xl text-muted-foreground leading-relaxed">
-            GitProof is built with privacy at its core. We only access public
-            GitHub data and never store sensitive information.
+            GitProof uses your GitHub identity, public repository data, and the
+            portfolio content you choose to save. We do not access private
+            repositories.
           </p>
           <div className="flex items-center gap-4 text-sm text-muted-foreground pt-4 border-t border-border/50">
-            <span>Last Updated: December 2025</span>
+            <span>Last Updated: March 2026</span>
             <span>•</span>
-            <span>Effective Date: December 2025</span>
+            <span>Effective Date: March 2026</span>
           </div>
         </div>
 
@@ -51,10 +52,11 @@ export default async function PrivacyPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-1">
-                  Read-Only Access
+                  No Private Repo Access
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  We only request read-only permissions to your public GitHub data.
+                  We do not request GitHub scopes that grant access to private
+                  repositories.
                 </p>
               </div>
             </div>
@@ -64,10 +66,11 @@ export default async function PrivacyPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-1">
-                  Minimal Storage
+                  Stored In Your Account
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  We cache data temporarily to improve performance, not to track you.
+                  We store synced portfolio data, saved edits, and encrypted
+                  GitHub tokens on our server so the app can work.
                 </p>
               </div>
             </div>
@@ -77,10 +80,11 @@ export default async function PrivacyPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-1">
-                  Public Data Only
+                  Public GitHub Content
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  We never access private repositories or sensitive information.
+                  Optional AI features may read public READMEs and selected
+                  public files from repositories already linked to your account.
                 </p>
               </div>
             </div>
@@ -90,10 +94,11 @@ export default async function PrivacyPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-1">
-                  Full Control
+                  Delete From Settings
                 </h3>
                 <p className="text-sm text-muted-foreground">
-                  Delete your data anytime by revoking GitHub OAuth access.
+                  You can delete your stored data from the Settings page at any
+                  time.
                 </p>
               </div>
             </div>
@@ -113,30 +118,30 @@ export default async function PrivacyPage() {
 
           <div className="prose prose-slate dark:prose-invert max-w-none">
             <h3 className="text-xl font-semibold mt-8 mb-4">
-              1.1 GitHub Public Data
+              1.1 Account and Repository Data
             </h3>
             <p className="text-foreground/80 leading-relaxed">
-              When you sign in with GitHub, we access the following public
-              information through GitHub's API:
+              When you sign in and sync your account, we store and process:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-foreground/80 my-4">
-              <li>Your public profile information (name, username, avatar)</li>
-              <li>Public repository metadata (names, descriptions, languages)</li>
-              <li>Commit history and contribution statistics</li>
-              <li>Stars, forks, and repository topics</li>
-              <li>Public contribution graph data</li>
+              <li>Your GitHub identity data (name, username, email, avatar)</li>
+              <li>GitHub OAuth account data, including a server-side access token and granted scopes</li>
+              <li>Public repository metadata, README content, and derived portfolio metrics</li>
+              <li>Public contribution and activity statistics pulled from GitHub</li>
+              <li>Portfolio content you save in GitProof, such as bio text, visibility, and AI-generated edits</li>
             </ul>
 
             <h3 className="text-xl font-semibold mt-8 mb-4">
-              1.2 Usage Information
+              1.2 Operational Data
             </h3>
             <p className="text-foreground/80 leading-relaxed">
-              We collect minimal usage data to improve our service:
+              We also keep a small amount of operational data so the product can run:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-foreground/80 my-4">
-              <li>Authentication timestamps (when you sign in/out)</li>
-              <li>Feature usage (which pages you visit within GitProof)</li>
-              <li>Error logs (to fix bugs and improve stability)</li>
+              <li>Sync timestamps and cached analytics snapshots</li>
+              <li>Session records used for authentication flows</li>
+              <li>Your email notification preference</li>
+              <li>Server-side error logs when actions fail</li>
             </ul>
 
             <h3 className="text-xl font-semibold mt-8 mb-4">
@@ -156,7 +161,7 @@ export default async function PrivacyPage() {
                     size={16}
                     className="text-emerald-500 mt-1 shrink-0"
                   />
-                  <span>We never read repository code or file contents</span>
+                  <span>We do not run third-party page analytics today</span>
                 </li>
                 <li className="flex items-start gap-2">
                   <CheckCircle2
@@ -170,7 +175,7 @@ export default async function PrivacyPage() {
                     size={16}
                     className="text-emerald-500 mt-1 shrink-0"
                   />
-                  <span>We never sell or share your data with third parties</span>
+                  <span>We do not sell your personal data</span>
                 </li>
               </ul>
             </div>
@@ -190,7 +195,7 @@ export default async function PrivacyPage() {
 
           <div className="prose prose-slate dark:prose-invert max-w-none">
             <p className="text-foreground/80 leading-relaxed mb-6">
-              We use the collected data exclusively to:
+              We use this data to:
             </p>
 
             <div className="space-y-4">
@@ -206,21 +211,22 @@ export default async function PrivacyPage() {
 
               <div className="p-4 bg-card border border-border rounded-lg">
                 <h4 className="font-semibold text-foreground mb-2">
-                  Provide Personalized Insights
+                  Provide AI Features You Request
                 </h4>
                 <p className="text-sm text-muted-foreground m-0">
-                  Detect your technical strengths and growth opportunities using
-                  heuristic analysis.
+                  When you choose AI actions, we send the relevant public repo
+                  context or portfolio text to Google Gemini to generate bios,
+                  descriptions, and README drafts.
                 </p>
               </div>
 
               <div className="p-4 bg-card border border-border rounded-lg">
                 <h4 className="font-semibold text-foreground mb-2">
-                  Cache for Performance
+                  Store and Refresh Your Sync
                 </h4>
                 <p className="text-sm text-muted-foreground m-0">
-                  Store calculated metrics temporarily (up to 1 hour) to reduce
-                  API calls and improve load times.
+                  Save synced data in our database and treat it as stale after
+                  about one hour so you can refresh it when needed.
                 </p>
               </div>
 
@@ -230,7 +236,7 @@ export default async function PrivacyPage() {
                 </h4>
                 <p className="text-sm text-muted-foreground m-0">
                   If you choose to make your profile public, we display your
-                  report card at gitproof.com/u/[username].
+                  report card at /u/[username].
                 </p>
               </div>
             </div>
@@ -254,16 +260,20 @@ export default async function PrivacyPage() {
             </h3>
             <ul className="list-disc pl-6 space-y-2 text-foreground/80 my-4">
               <li>
-                <strong>Account Data:</strong> Stored while you have an active
-                account
+                <strong>Account Data:</strong> Stored until you delete your
+                GitProof account
               </li>
               <li>
-                <strong>Cached Metrics:</strong> Automatically refreshed every 1
-                hour
+                <strong>GitHub Tokens and Sessions:</strong> Stored while your
+                account remains active so sync and sign-in continue to work
               </li>
               <li>
-                <strong>Public Profiles:</strong> Remain live until you disable
-                them
+                <strong>Synced Metrics and Saved Content:</strong> Stored until
+                you resync, edit, or delete your account
+              </li>
+              <li>
+                <strong>Public Profiles:</strong> Stay live until you switch
+                them off or delete your account
               </li>
             </ul>
 
@@ -271,13 +281,13 @@ export default async function PrivacyPage() {
               3.2 Security Measures
             </h3>
             <p className="text-foreground/80 leading-relaxed">
-              We implement industry-standard security practices:
+              We currently apply the following controls:
             </p>
             <ul className="list-disc pl-6 space-y-2 text-foreground/80 my-4">
               <li>OAuth 2.0 authentication through GitHub</li>
-              <li>Encrypted database connections</li>
-              <li>Regular security audits and updates</li>
-              <li>No plaintext storage of sensitive tokens</li>
+              <li>GitHub tokens are encrypted at rest on our server and are not exposed to browser sessions</li>
+              <li>Authenticated routes and per-user database checks gate private account actions</li>
+              <li>We rely on our hosting and database providers for transport and infrastructure security</li>
             </ul>
           </div>
         </section>
@@ -295,7 +305,7 @@ export default async function PrivacyPage() {
 
           <div className="prose prose-slate dark:prose-invert max-w-none">
             <p className="text-foreground/80 leading-relaxed mb-6">
-              You have complete control over your data:
+              You have the following controls:
             </p>
 
             <div className="space-y-4">
@@ -304,7 +314,17 @@ export default async function PrivacyPage() {
                   Delete Your Account
                 </h4>
                 <p className="text-sm text-muted-foreground m-0">
-                  Revoke GitProof's access in your{" "}
+                  Delete your account from Settings to remove the data we store.
+                  We also attempt to revoke GitHub access during deletion.
+                </p>
+              </div>
+
+              <div className="p-4 bg-card border border-border rounded-lg">
+                <h4 className="font-semibold text-foreground mb-2">
+                  Disconnect GitHub
+                </h4>
+                <p className="text-sm text-muted-foreground m-0">
+                  Removing GitProof from{" "}
                   <a
                     href="https://github.com/settings/applications"
                     target="_blank"
@@ -313,7 +333,8 @@ export default async function PrivacyPage() {
                   >
                     GitHub Settings → Applications
                   </a>
-                  . This immediately removes all your data from our system.
+                  {" "}stops future access, but it does not delete data already
+                  stored in GitProof.
                 </p>
               </div>
 
@@ -329,11 +350,11 @@ export default async function PrivacyPage() {
 
               <div className="p-4 bg-card border border-border rounded-lg">
                 <h4 className="font-semibold text-foreground mb-2">
-                  Export Your Data
+                  Review and Edit Saved Content
                 </h4>
                 <p className="text-sm text-muted-foreground m-0">
-                  All displayed metrics are derived from public GitHub data you
-                  already have access to.
+                  You can update your bio, featured projects, and saved AI copy
+                  at any time from the editor and settings pages.
                 </p>
               </div>
             </div>
@@ -361,14 +382,36 @@ export default async function PrivacyPage() {
                 <div className="flex justify-between items-start">
                   <div>
                     <h4 className="font-semibold text-foreground mb-1">
-                      GitHub OAuth
+                      GitHub
                     </h4>
                     <p className="text-sm text-muted-foreground m-0">
-                      For authentication and accessing public repository data
+                      For sign-in and fetching your public GitHub data
                     </p>
                   </div>
                   <a
                     href="https://docs.github.com/en/site-policy/privacy-policies/github-privacy-statement"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs text-primary hover:underline whitespace-nowrap"
+                  >
+                    Privacy Policy
+                  </a>
+                </div>
+              </div>
+
+              <div className="p-4 bg-card border border-border rounded-lg">
+                <div className="flex justify-between items-start">
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-1">
+                      Google Gemini
+                    </h4>
+                    <p className="text-sm text-muted-foreground m-0">
+                      For optional AI-generated bios, project descriptions, and
+                      README drafts when you trigger those features
+                    </p>
+                  </div>
+                  <a
+                    href="https://policies.google.com/privacy"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-xs text-primary hover:underline whitespace-nowrap"

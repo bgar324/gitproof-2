@@ -20,8 +20,13 @@ export function FocusHoursCard({ data }: FocusHoursCardProps) {
         <Clock size={18} className="text-muted-foreground" />
         <h3 className="font-serif text-lg">Focus Hours</h3>
       </div>
-      <div className="h-[200px] w-full">
-        <ResponsiveContainer width="100%" height="100%">
+      <div className="h-[200px] w-full min-w-0 min-h-[200px]">
+        <ResponsiveContainer
+          width="100%"
+          height="100%"
+          minWidth={0}
+          minHeight={200}
+        >
           <BarChart data={data}>
             <Tooltip
               cursor={{ fill: "hsl(var(--muted)/0.2)" }}

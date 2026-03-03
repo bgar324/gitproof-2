@@ -5,16 +5,23 @@ interface SwitchProps {
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
   label: string;
+  disabled?: boolean;
 }
 
-export function Switch({ checked, onCheckedChange, label }: SwitchProps) {
+export function Switch({
+  checked,
+  onCheckedChange,
+  label,
+  disabled = false,
+}: SwitchProps) {
   return (
     <div className="flex items-center justify-between">
       <span className="text-sm font-medium text-foreground">{label}</span>
       <button
         onClick={() => onCheckedChange(!checked)}
+        disabled={disabled}
         className={cn(
-          "w-12 h-6 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20",
+          "w-12 h-6 rounded-full p-1 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-primary/20 disabled:cursor-not-allowed disabled:opacity-60",
           checked ? "bg-primary" : "bg-secondary"
         )}
       >

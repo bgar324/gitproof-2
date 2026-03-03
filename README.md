@@ -53,8 +53,9 @@ GitProof 2 is a full-stack Next.js application that helps developers:
 
 ### 🔐 GitHub Authentication
 - **OAuth 2.0 integration** with GitHub
-- **Read-only access** to public repositories (`public_repo` scope)
-- **Secure token storage** via Prisma and NextAuth
+- **Identity-only OAuth scopes** (`read:user`, `user:email`)
+- **Public-repo-only sync** with no private-repository access
+- **Encrypted server-side token storage** via Prisma and NextAuth
 - **Session persistence** with JWT strategy
 
 ### 📊 Repository Analysis Dashboard
@@ -280,8 +281,7 @@ Protected Routes (requires authentication)
 ├── /dashboard                 → Analytics overview
 ├── /dashboard/repos           → All repositories
 ├── /editor                    → Portfolio editor
-├── /settings                  → Account settings
-└── /api/sync                  → Data sync endpoint
+└── /settings                  → Account settings
 ```
 
 ### Data Flow
@@ -395,32 +395,8 @@ model Session {
 
 ### REST Endpoints
 
-#### `POST /api/sync`
-Sync GitHub data to database
-
-**Auth**: Required
-
-**Request**:
-```json
-{
-  "heatmap": [{ "date": "2025-01-01", "count": 5 }],
-  "totalContributions": 1042,
-  "pullRequests": 156,
-  "repoCount": 42,
-  "streak": 12,
-  "topRepos": [...],
-  "topLanguages": [...],
-  "hourlyActivity": [...]
-}
-```
-
-**Response**:
-```json
-{
-  "success": true,
-  "user": { "id": "...", "username": "...", ... }
-}
-```
+No standalone sync endpoint. Repository syncing is performed through authenticated
+server actions that fetch directly from GitHub on the server.
 
 ### Server Actions
 
@@ -752,7 +728,7 @@ export function sanitizeForPostgres(input: string | null): string {
    ```
 
 2. **GitHub OAuth prompts authorization**
-   - Scopes: `read:user`, `user:email`, `public_repo`
+   - Scopes: `read:user`, `user:email`
 
 3. **GitHub redirects with code**
    ```
@@ -808,10 +784,11 @@ All inputs sanitized before storage:
 - No cross-user data access
 
 ### 3. OAuth Token Security
-- Tokens stored server-side only (Prisma)
+- Tokens stored encrypted server-side only (Prisma)
 - Never exposed to client
-- Read-only scope (`public_repo`)
-- Revoked on account deletion
+- OAuth scopes limited to GitHub identity
+- Private repositories are never requested or synced
+- Revocation is attempted on account deletion
 
 ### 4. Route Protection
 Middleware enforces auth:

@@ -2,6 +2,7 @@ import ReposView from "./view";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { getGitHubConnectionStatus } from "@/lib/github-connection";
 import { getLanguageColor } from "@/lib/language-colors";
 
 export default async function AllReposPage() {
@@ -25,6 +26,13 @@ export default async function AllReposPage() {
   if (!user) {
     redirect("/");
   }
+
+  const { requiresReconnect } = await getGitHubConnectionStatus(
+    session.user.email,
+  );
+  const needsBootstrapSync =
+    !requiresReconnect &&
+    (user.projects.length === 0 || !user.profileData || !user.lastSyncedAt);
 
   // 3. Check if cache is stale (> 1 hour old) - same as dashboard
   const ONE_HOUR = 60 * 60 * 1000;
@@ -59,6 +67,8 @@ export default async function AllReposPage() {
       repos={repos}
       lastSyncedAt={lastSyncedAt}
       isStale={isStale}
+      needsInitialSync={needsBootstrapSync}
+      requiresReconnect={requiresReconnect}
     />
   );
 }

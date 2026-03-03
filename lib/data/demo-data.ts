@@ -9,11 +9,11 @@ export const DEMO_STATS = {
   totalContributions: 1042,
   consistency: 98,
   grade: "S",
-  archetype: "The Machine",
+  archetype: "Systems Builder",
 };
 
 export const DEMO_INSIGHTS = [
-  "Exceptional code review depth in TypeScript.",
-  "Maintains 99.9% test coverage on core libs.",
-  "High velocity shipper (Avg PR merge: 4h).",
+  "Maintains several active TypeScript projects.",
+  "Recent pushes suggest steady ongoing work.",
+  "Documentation is strong enough to explain project intent quickly.",
 ];

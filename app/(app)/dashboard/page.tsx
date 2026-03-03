@@ -3,6 +3,7 @@ import DashboardView from "./view";
 import { redirect } from "next/navigation";
 import { auth } from "@/auth";
 import { db } from "@/lib/db";
+import { getGitHubConnectionStatus } from "@/lib/github-connection";
 import { getLanguageColor } from "@/lib/language-colors";
 import type { GithubProfile } from "@/lib/github";
 
@@ -19,7 +20,6 @@ export default async function DashboardPage() {
     include: {
       projects: {
         orderBy: { impactScore: 'desc' },
-        take: 6, // Top 6 for dashboard
       },
     },
   });
@@ -27,6 +27,13 @@ export default async function DashboardPage() {
   if (!user) {
     redirect("/");
   }
+
+  const { requiresReconnect } = await getGitHubConnectionStatus(
+    session.user.email,
+  );
+  const needsBootstrapSync =
+    !requiresReconnect &&
+    (user.projects.length === 0 || !user.profileData || !user.lastSyncedAt);
 
   // 3. Check if cache is stale (> 1 hour old)
   const ONE_HOUR = 60 * 60 * 1000;
@@ -37,7 +44,7 @@ export default async function DashboardPage() {
   const cachedData = (user.profileData || {}) as Partial<GithubProfile>;
 
   // Map projects to topRepos format
-  const topRepos = user.projects.map((p) => ({
+  const topRepos = user.projects.slice(0, 6).map((p) => ({
     id: p.githubId,
     name: p.name,
     url: p.url,
@@ -76,6 +83,8 @@ export default async function DashboardPage() {
       data={hybridData}
       lastSyncedAt={lastSyncedAt}
       isStale={isStale}
+      needsInitialSync={needsBootstrapSync}
+      requiresReconnect={requiresReconnect}
     />
   );
 }

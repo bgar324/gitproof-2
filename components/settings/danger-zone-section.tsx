@@ -34,11 +34,11 @@ export function DangerZoneSection({
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <h4 className="text-sm font-medium text-red-500">
-              Delete Account & Revoke OAuth
+              Delete Account
             </h4>
             <p className="text-xs text-red-500/60 mt-1">
-              Permanently deletes all data, revokes GitHub OAuth, and clears all
-              sessions. You&apos;ll start from scratch if you return.
+              Permanently deletes stored data and disconnects GitHub. You&apos;ll
+              start from scratch if you return.
             </p>
           </div>
           <button
@@ -61,9 +61,10 @@ export function DangerZoneSection({
                 Confirm complete account deletion
               </h5>
               <p className="text-xs text-red-500/80 leading-relaxed">
-                This will permanently delete all your data AND revoke GitHub OAuth
-                authorization. You&apos;ll need to re-authorize if you sign up again. Type
-                your username and confirmation phrase to proceed.
+                This will permanently delete your stored data and attempt to
+                revoke GitHub authorization. You&apos;ll need to sign in again if
+                you come back. Type your username and confirmation phrase to
+                proceed.
               </p>
             </div>
 

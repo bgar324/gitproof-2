@@ -2,12 +2,14 @@
 
 import React, { useState, useMemo, useEffect } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { GitCommit, GitPullRequest, GitFork, Activity } from "lucide-react";
 import type { GithubProfile, GithubRepo } from "@/lib/github";
 import { getTimeAgo } from "@/lib/utils";
 import RepoModal from "@/components/repo-modal";
 import { useRouter } from "next/navigation";
 import { triggerSync } from "@/app/actions";
+import { toast } from "sonner";
 import {
   AnimatedCard,
   StatCard,
@@ -25,16 +27,22 @@ export default function DashboardView({
   data,
   lastSyncedAt,
   isStale,
+  needsInitialSync,
+  requiresReconnect,
 }: {
   data: GithubProfile;
   lastSyncedAt: Date | null;
   isStale: boolean;
+  needsInitialSync: boolean;
+  requiresReconnect: boolean;
 }) {
   const router = useRouter();
   const [isScoreModalOpen, setIsScoreModalOpen] = useState(false);
   const [timeRange, setTimeRange] = useState<"all" | "90d" | "30d">("all");
   const [selectedRepo, setSelectedRepo] = useState<GithubRepo | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isBootstrapping, setIsBootstrapping] = useState(needsInitialSync);
+  const [bootstrapError, setBootstrapError] = useState<string | null>(null);
   const [timeAgo, setTimeAgo] = useState(
     lastSyncedAt ? getTimeAgo(lastSyncedAt) : "never"
   );
@@ -47,6 +55,48 @@ export default function DashboardView({
     return () => clearInterval(interval);
   }, [lastSyncedAt]);
 
+  useEffect(() => {
+    let cancelled = false;
+
+    async function runInitialSync() {
+      if (!needsInitialSync || requiresReconnect) {
+        setIsBootstrapping(false);
+        return;
+      }
+
+      setBootstrapError(null);
+      setIsRefreshing(true);
+
+      try {
+        await triggerSync();
+        if (!cancelled) {
+          setTimeAgo("just now");
+          router.refresh();
+        }
+      } catch (error) {
+        if (!cancelled) {
+          const message =
+            error instanceof Error
+              ? error.message
+              : "Initial sync failed. Please try again.";
+          setBootstrapError(message);
+          toast.error(message);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsRefreshing(false);
+          setIsBootstrapping(false);
+        }
+      }
+    }
+
+    void runInitialSync();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [needsInitialSync, requiresReconnect, router]);
+
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
@@ -55,6 +105,9 @@ export default function DashboardView({
       setTimeAgo("just now");
     } catch (error) {
       console.error("Refresh failed:", error);
+      toast.error(
+        error instanceof Error ? error.message : "Refresh failed. Please try again.",
+      );
     } finally {
       setIsRefreshing(false);
     }
@@ -85,6 +138,28 @@ export default function DashboardView({
       />
 
       <div className="max-w-7xl mx-auto space-y-6">
+        {requiresReconnect && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700">
+            Legacy GitHub permissions were detected. Reconnect GitHub in{" "}
+            <Link href="/settings" className="font-medium underline">
+              Settings
+            </Link>{" "}
+            before syncing again.
+          </div>
+        )}
+
+        {isBootstrapping && (
+          <div className="rounded-lg border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+            Setting up your dashboard for the first time. This can take a moment.
+          </div>
+        )}
+
+        {bootstrapError && !requiresReconnect && (
+          <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-3 text-sm text-red-600">
+            {bootstrapError}
+          </div>
+        )}
+
         <DashboardHeader
           username={data.username}
           streak={data.streak}
@@ -94,6 +169,7 @@ export default function DashboardView({
           isStale={isStale}
           hasSynced={!!lastSyncedAt}
           onRefresh={handleRefresh}
+          refreshDisabled={requiresReconnect}
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

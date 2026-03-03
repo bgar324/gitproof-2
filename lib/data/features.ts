@@ -27,9 +27,9 @@ export const FEATURES: Feature[] = [
     iconBg: "bg-primary/10",
     borderHover: "hover:border-primary/50",
     glowColor: "bg-primary/5",
-    title: "Impact Scoring Model",
+    title: "Repository Scoring",
     description:
-      "Aggregates multiple repository signals—including stars, forks, pull request activity, and recency—into a single normalized score that reflects real project impact.",
+      "Combines public repository signals like stars, forks, recent activity, and maintenance into one score that is easier to review quickly.",
     span: "md:col-span-2",
   },
   {
@@ -39,9 +39,9 @@ export const FEATURES: Feature[] = [
     iconBg: "bg-purple-500/10",
     borderHover: "hover:border-purple-500/50",
     glowColor: "bg-purple-500/5",
-    title: "Developer Archetype Analysis",
+    title: "Work Pattern Summary",
     description:
-      "Classifies coding patterns across projects to highlight recurring strengths, workflows, and engineering tendencies—offering a higher-level view of how you build.",
+      "Summarizes recurring patterns across your visible work so the profile reads like a clear snapshot instead of a list of repositories.",
     rowSpan: "md:row-span-2",
   },
   {
@@ -51,9 +51,9 @@ export const FEATURES: Feature[] = [
     iconBg: "bg-amber-500/10",
     borderHover: "hover:border-amber-500/50",
     glowColor: "bg-amber-500/5",
-    title: "Automated Codebase Insights",
+    title: "Repository Insights",
     description:
-      "Identifies notable engineering signals such as testing discipline, prototyping speed, and architectural consistency using lightweight heuristics.",
+      "Pulls out a few plain-language observations from your public repositories and metadata to make the profile more readable.",
   },
   {
     id: "verified",
@@ -62,8 +62,8 @@ export const FEATURES: Feature[] = [
     iconBg: "bg-emerald-500/10",
     borderHover: "hover:border-emerald-500/50",
     glowColor: "bg-emerald-500/5",
-    title: "Verifiable Public Profiles",
+    title: "Public Profile Link",
     description:
-      "Generate a read-only GitProof link suitable for resumes and applications. All data is sourced directly from public repositories—no manual input or embellishment.",
+      "Publish a GitProof URL you can share. The stats come from public GitHub data, while your bio and featured repositories stay editable.",
   },
 ];

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
   toggleProfilePublic,
@@ -26,9 +27,14 @@ type EditorUser = Pick<User, "username" | "bio" | "isPublic">;
 interface EditorWorkbenchProps {
   user: EditorUser;
   projects?: Project[];
+  requiresReconnect?: boolean;
 }
 
-export function EditorWorkbench({ user, projects = [] }: EditorWorkbenchProps) {
+export function EditorWorkbench({
+  user,
+  projects = [],
+  requiresReconnect = false,
+}: EditorWorkbenchProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isBioGenerating, setIsBioGenerating] = useState(false);
 
@@ -191,6 +197,16 @@ export function EditorWorkbench({ user, projects = [] }: EditorWorkbenchProps) {
   return (
     <div className="w-full h-full space-y-12 pb-32">
       <div className="max-w-6xl mx-auto px-6 space-y-12">
+        {requiresReconnect && (
+          <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-700">
+            Reconnect GitHub in{" "}
+            <Link href="/settings" className="font-medium underline">
+              Settings
+            </Link>{" "}
+            to restore sync and repository-based AI features.
+          </div>
+        )}
+
         <IdentitySection
           username={user.username || "unknown"}
           isPublic={isPublic}

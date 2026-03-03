@@ -9,17 +9,20 @@ export interface Step {
 export const STEPS: Step[] = [
   {
     title: "Connect",
-    description: "Sign in with GitHub. We scan your public history securely.",
+    description:
+      "Sign in with GitHub using identity-only auth. GitProof reads public repositories only.",
     icon: Github,
   },
   {
     title: "Analyze",
-    description: "Our engine crunches the numbers to find your strengths.",
+    description:
+      "We sync public repository and activity data, then build a cleaner profile from that evidence.",
     icon: Search,
   },
   {
     title: "Share",
-    description: "Get your public URL and add it to your resume/LinkedIn.",
+    description:
+      "Adjust your bio, choose what to feature, and share a public profile link when it is ready.",
     icon: ArrowRight,
   },
 ];
