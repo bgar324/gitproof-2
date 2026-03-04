@@ -38,6 +38,7 @@ export function Navbar({ session, variant = "marketing" }: NavbarProps) {
         ]
       : [
           { href: "/methodology", label: "Methodology" },
+          { href : "/manifesto", label : "Manifesto"},
           { href: "/privacy", label: "Privacy" },
         ];
 

@@ -5,6 +5,7 @@ export function Footer() {
   const links = [
     { href: "/methodology", label: "Methodology" },
     { href: "/privacy", label: "Privacy" },
+    { href : "/manifesto", label : "Manifesto"},
     {
       href: "https://github.com/bgar324/gitproof-2",
       label: "GitHub",
