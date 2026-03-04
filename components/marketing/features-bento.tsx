@@ -28,11 +28,6 @@ export function FeaturesBento() {
             </div>
           ))}
         </div>
-
-        <div className="mt-6 rounded-3xl border border-border/70 bg-secondary/30 px-6 py-5 text-sm leading-7 text-foreground/80">
-          GitProof stores synced profile data and the edits you save in the app so
-          the profile can load quickly. It does not access private repositories.
-        </div>
       </div>
     </section>
   );
