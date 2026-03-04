@@ -54,7 +54,7 @@ export function Hero({ session }: HeroProps) {
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
                 GitProof turns your public repositories and activity into a cleaner,
-                easier-to-review profile. It is built for clarity, not hype.
+                easier-to-review profile.
               </p>
             </motion.div>
 

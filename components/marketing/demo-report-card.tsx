@@ -10,10 +10,6 @@ export function DemoReportCard() {
       <div className="border-b border-border/70 px-6 py-5">
         <div className="mb-4 flex items-center justify-between text-xs font-medium text-muted-foreground">
           <span>Sample profile</span>
-          <span className="inline-flex items-center gap-1 rounded-full border border-border bg-secondary/60 px-2.5 py-1">
-            <ShieldCheck size={12} className="text-emerald-500" />
-            Public repos
-          </span>
         </div>
 
         <div className="flex items-center justify-between gap-4">

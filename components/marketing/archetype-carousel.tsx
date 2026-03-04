@@ -39,10 +39,6 @@ export function ArchetypeCarousel({ session }: ArchetypeCarouselProps) {
           <h2 className="font-serif text-3xl tracking-tight text-foreground sm:text-4xl">
             Archetypes
           </h2>
-          <p className="text-base leading-8 text-muted-foreground sm:text-lg">
-            GitProof groups visible patterns into shorthand labels. They are a
-            quick summary of how someone tends to build, not a final judgment.
-          </p>
         </div>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">

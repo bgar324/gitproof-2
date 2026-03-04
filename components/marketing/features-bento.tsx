@@ -8,10 +8,6 @@ export function FeaturesBento() {
           <h2 className="font-serif text-3xl tracking-tight text-foreground sm:text-4xl">
             What GitProof actually does
           </h2>
-          <p className="text-base leading-8 text-muted-foreground sm:text-lg">
-            It gives your public GitHub work a cleaner structure. The product is
-            meant to make review faster, not louder.
-          </p>
         </div>
 
         <div className="mt-10 grid gap-4 md:grid-cols-2">
